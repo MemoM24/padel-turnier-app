@@ -333,6 +333,7 @@ export function buildKOBracket(advancingTeams: Team[], activeCourts: Court[]): K
 
 /**
  * Update a KO match score and propagate the winner to the next round.
+ * Optionally stores set details (e.g. 6:4, 3:6, 10:8).
  */
 export function updateKOMatchScore(
   bracket: KOBracket,
@@ -340,6 +341,7 @@ export function updateKOMatchScore(
   score1: number,
   score2: number,
   teams: Team[],
+  sets?: import('@/types').SetScore[],
 ): KOBracket {
   const matches = bracket.matches.map((m) => ({ ...m }));
   const matchIdx = matches.findIndex((m) => m.id === matchId);
@@ -348,6 +350,7 @@ export function updateKOMatchScore(
   const match = matches[matchIdx];
   match.score1 = score1;
   match.score2 = score2;
+  if (sets) match.sets = sets;
 
   // Determine winner
   const winner = score1 > score2 ? match.team1 : score2 > score1 ? match.team2 : null;
@@ -376,6 +379,7 @@ export function updateKOMatchScore(
 
 /**
  * Update a group match score.
+ * Optionally stores set details (e.g. 6:4, 3:6, 10:8).
  */
 export function updateGroupMatchScore(
   groups: Group[],
@@ -383,6 +387,7 @@ export function updateGroupMatchScore(
   matchId: string,
   score1: number,
   score2: number,
+  sets?: import('@/types').SetScore[],
 ): Group[] {
   return groups.map((g) => {
     if (g.id !== groupId) return g;
@@ -390,7 +395,7 @@ export function updateGroupMatchScore(
       ...g,
       matches: g.matches.map((m) => {
         if (m.id !== matchId) return m;
-        return { ...m, score1, score2 };
+        return { ...m, score1, score2, ...(sets ? { sets } : {}) };
       }),
     };
   });
