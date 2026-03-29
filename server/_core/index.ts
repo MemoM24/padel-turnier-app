@@ -68,6 +68,11 @@ async function startServer() {
   app.get("/view", (_req, res) => {
     res.sendFile(path.join(__dirname, "viewer.html"));
   });
+  // Join route – same viewer with join mode
+  app.get("/join", (req: express.Request, res: express.Response) => {
+    const id = req.query.id as string;
+    res.redirect(`/view?id=${id}&join=1`);
+  });
 
   app.use(
     "/api/trpc",

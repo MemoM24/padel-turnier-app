@@ -133,3 +133,11 @@
 - [x] Spieler-Screen Tooltip: Spieler eingeben + gespeicherte Spieler + QR einladen
 - [x] Match-Screen Tooltip: Ergebnis eintragen + Tabelle + QR-Live-Ansicht + Timer
 - [x] Sprachbutton: Schwarzes (DE) / Blaues (EN) Kreis-Badge statt Flaggen-Emoji – funktioniert auf allen Plattformen
+
+## Verbesserungen v5
+- [x] Sprachbutton: SVG-Flaggen (DE/GB) via FlagIcon-Komponente – funktioniert auf allen Plattformen
+- [ ] Home-Tab: Funktion definieren (später Login/Statistiken)
+- [x] Match-Screen: + Button nach letzter Runde zum Hinzufügen einer Extra-Runde (zufällige Auslosung)
+- [x] Match-Screen: Finalrunde-Button – Paarungen nach Tabelle (1.+3. vs 2.+4., 5.+7. vs 6.+8. usw.)
+- [x] QR-Code Live-Ansicht: viewer.html wird jetzt beim Build nach dist/ kopiert
+- [x] QR-Code Spieler-Join: /join Route hinzugefügt, leitet auf /view?join=1 weiter

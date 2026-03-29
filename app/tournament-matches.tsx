@@ -24,6 +24,8 @@ import { Avatar } from '@/components/Avatar';
 import { t } from '@/i18n';
 import {
   generateNextRound,
+  generateFinalRound,
+  generateExtraRound,
   applyRoundScores,
   getStandings,
   getAverage,
@@ -504,7 +506,54 @@ export default function TournamentMatchesScreen() {
   const standings = getStandings(tournament.players);
   const timerSeconds = (tournament.settings.gameTimeMinutes ?? 10) * 60;
 
-  // ── Round Tabs (horizontal scroll) ──────────────────────────────────────────
+  // ── Extra Round / Final Round handlers ────────────────────────────────────
+  const canAddRound = isLastRound && allScoresEntered && !tournament.finished;
+
+  const handleAddExtraRound = async () => {
+    if (!allScoresEntered) {
+      Alert.alert('', t('allScoresRequired'));
+      return;
+    }
+    // First save current round scores
+    const scoreList = currentRound.matches.map((m) => {
+      const s = scores[m.id]!;
+      return { matchId: m.id, score1: s.s1!, score2: s.s2! };
+    });
+    let updated = applyRoundScores(tournament, currentRoundIndex, scoreList);
+    const extraRound = generateExtraRound(updated);
+    updated = {
+      ...updated,
+      rounds: [...updated.rounds, extraRound],
+      currentRound: updated.currentRound + 1,
+    };
+    await saveTournament(updated);
+    setScores({});
+    setSelectedRound(null);
+  };
+
+  const handleAddFinalRound = async () => {
+    if (!allScoresEntered) {
+      Alert.alert('', t('allScoresRequired'));
+      return;
+    }
+    // First save current round scores
+    const scoreList = currentRound.matches.map((m) => {
+      const s = scores[m.id]!;
+      return { matchId: m.id, score1: s.s1!, score2: s.s2! };
+    });
+    let updated = applyRoundScores(tournament, currentRoundIndex, scoreList);
+    const finalRound = generateFinalRound(updated);
+    updated = {
+      ...updated,
+      rounds: [...updated.rounds, finalRound],
+      currentRound: updated.currentRound + 1,
+    };
+    await saveTournament(updated);
+    setScores({});
+    setSelectedRound(null);
+  };
+
+  // ── Round Tabs (horizontal scroll) ────────────────────────────────────────────
   const activeRoundTab = selectedRound ?? tournament.currentRound;
   const renderRoundTabs = () => (
     <ScrollView
@@ -513,23 +562,46 @@ export default function TournamentMatchesScreen() {
       style={styles.roundTabsScroll}
       contentContainerStyle={styles.roundTabsContent}
     >
-      {Array.from({ length: tournament.rounds.length }, (_, i) => i + 1).map((r) => (
+      {Array.from({ length: tournament.rounds.length }, (_, i) => i + 1).map((r) => {
+        const round = tournament.rounds[r - 1];
+        const label = round?.isFinal ? '🏆' : round?.isExtra ? `${r}+` : `${r}`;
+        return (
+          <Pressable
+            key={r}
+            style={[styles.roundTab, r === activeRoundTab && styles.roundTabActive, round?.isFinal && styles.roundTabFinal]}
+            onPress={() => {
+              if (r === tournament.currentRound) {
+                setSelectedRound(null);
+              } else {
+                setSelectedRound(r);
+              }
+            }}
+          >
+            <Text style={[styles.roundTabText, r === activeRoundTab && styles.roundTabTextActive, round?.isFinal && styles.roundTabTextFinal]}>
+              {label}
+            </Text>
+          </Pressable>
+        );
+      })}
+      {/* + button: only shown when on last round and all scores entered */}
+      {canAddRound && (
         <Pressable
-          key={r}
-          style={[styles.roundTab, r === activeRoundTab && styles.roundTabActive]}
+          style={styles.roundTabAdd}
           onPress={() => {
-            if (r === tournament.currentRound) {
-              setSelectedRound(null); // back to current (editable)
-            } else {
-              setSelectedRound(r);
-            }
+            Alert.alert(
+              'Runde hinzufügen',
+              'Welche Art von Runde möchtest du hinzufügen?',
+              [
+                { text: 'Abbrechen', style: 'cancel' },
+                { text: '🔀 Zufällige Runde', onPress: handleAddExtraRound },
+                { text: '🏆 Finalrunde', onPress: handleAddFinalRound },
+              ]
+            );
           }}
         >
-          <Text style={[styles.roundTabText, r === activeRoundTab && styles.roundTabTextActive]}>
-            {r}
-          </Text>
+          <Text style={styles.roundTabAddText}>+</Text>
         </Pressable>
-      ))}
+      )}
       <Text style={styles.roundTabLabel}>Runden</Text>
     </ScrollView>
   );
@@ -777,6 +849,23 @@ const styles = StyleSheet.create({
   },
   roundTabText: { fontSize: 16, fontWeight: '700', color: '#888' },
   roundTabTextActive: { color: '#ffffff' },
+  roundTabFinal: {
+    backgroundColor: '#2a1a0a',
+    borderColor: '#f59e0b',
+  },
+  roundTabTextFinal: { color: '#f59e0b' },
+  roundTabAdd: {
+    width: 44,
+    height: 44,
+    borderRadius: 8,
+    backgroundColor: '#0a2a1a',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1.5,
+    borderColor: '#1a9e6f',
+    borderStyle: 'dashed',
+  },
+  roundTabAddText: { fontSize: 22, fontWeight: '700', color: '#1a9e6f', lineHeight: 26 },
   roundTabLabel: {
     fontSize: 13,
     color: '#666',

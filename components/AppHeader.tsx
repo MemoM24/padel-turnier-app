@@ -4,6 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useTournament } from '@/context/TournamentContext';
 import { t } from '@/i18n';
+import { FlagIcon } from '@/components/FlagIcon';
 
 interface AppHeaderProps {
   title?: string;
@@ -106,9 +107,7 @@ export function AppHeader({
               onPress={toggleLanguage}
               style={({ pressed }) => [styles.langBtn, pressed && { opacity: 0.7 }]}
             >
-              <View style={[styles.langBadge, language === 'de' ? styles.langBadgeDe : styles.langBadgeEn]}>
-                <Text style={styles.langText}>{language === 'de' ? 'DE' : 'EN'}</Text>
-              </View>
+              <FlagIcon lang={language as 'de' | 'en'} size={32} />
             </Pressable>
           )}
         </View>

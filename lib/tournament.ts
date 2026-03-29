@@ -208,6 +208,60 @@ export function applyRoundScores(
   return updated;
 }
 
+/**
+ * Generate a final round based on current standings.
+ * Pairing: 1st+3rd vs 2nd+4th, 5th+7th vs 6th+8th, etc.
+ */
+export function generateFinalRound(tournament: Tournament): Round {
+  const { players, rounds, settings } = tournament;
+  const activeCourts = settings.courts.filter((c) => c.active);
+  const courts = activeCourts.length > 0 ? activeCourts : settings.courts;
+  const roundNumber = rounds.length + 1;
+
+  // Sort by standings
+  const sorted = getStandings(players);
+  const byePlayers: string[] = [];
+
+  // If odd number, last player gets a bye
+  const activePlayers = [...sorted];
+  if (activePlayers.length % 4 !== 0) {
+    // Remove players from end until divisible by 4 (they get bye)
+    while (activePlayers.length % 4 !== 0) {
+      const byePlayer = activePlayers.pop();
+      if (byePlayer) byePlayers.push(byePlayer.name);
+    }
+  }
+
+  const matches: Match[] = [];
+  // Pair: 1st+3rd vs 2nd+4th, 5th+7th vs 6th+8th, etc.
+  for (let i = 0; i < activePlayers.length; i += 4) {
+    if (i + 3 >= activePlayers.length) break;
+    const court = courts[(i / 4) % courts.length];
+    matches.push({
+      id: generateId(),
+      courtId: court.id,
+      courtName: court.name,
+      team1: [activePlayers[i].name, activePlayers[i + 2].name],   // 1st + 3rd
+      team2: [activePlayers[i + 1].name, activePlayers[i + 3].name], // 2nd + 4th
+      score1: null,
+      score2: null,
+    });
+  }
+
+  return { id: roundNumber, matches, byePlayers, isFinal: true };
+}
+
+/**
+ * Generate an extra round (random Americano-style) beyond the planned rounds.
+ */
+export function generateExtraRound(tournament: Tournament): Round {
+  const roundNumber = tournament.rounds.length + 1;
+  const extra = generateNextRound({ ...tournament, rounds: tournament.rounds });
+  if (extra) return { ...extra, id: roundNumber, isExtra: true };
+  // Fallback: empty round
+  return { id: roundNumber, matches: [], byePlayers: [], isExtra: true };
+}
+
 export function getStandings(players: Player[]): Player[] {
   return [...players].sort((a, b) => {
     if (b.points !== a.points) return b.points - a.points;

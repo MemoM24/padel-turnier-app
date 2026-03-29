@@ -35,6 +35,8 @@ export interface Round {
   id: number;
   matches: Match[];
   byePlayers: string[];
+  isFinal?: boolean;   // true for ranking-based final round
+  isExtra?: boolean;  // true for extra rounds beyond planned numRounds
 }
 
 export interface TournamentSettings {

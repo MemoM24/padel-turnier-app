@@ -17,6 +17,7 @@ import { t } from '@/i18n';
 import type { TournamentHistoryItem } from '@/types';
 import { useOnboarding } from '@/context/OnboardingContext';
 import { TooltipOverlay } from '@/components/TooltipOverlay';
+import { FlagIcon } from '@/components/FlagIcon';
 
 const TYPE_LABELS: Record<string, string> = {
   americano: '🔄 Americano',
@@ -136,9 +137,7 @@ export default function HomeScreen() {
           onPress={toggleLanguage}
           style={({ pressed }) => [styles.langBtn, pressed && { opacity: 0.7 }]}
         >
-          <View style={[styles.langBadge, language === 'de' ? styles.langBadgeDe : styles.langBadgeEn]}>
-            <Text style={styles.langText}>{language === 'de' ? 'DE' : 'EN'}</Text>
-          </View>
+          <FlagIcon lang={language as 'de' | 'en'} size={36} />
         </Pressable>
       </View>
 
