@@ -28,6 +28,13 @@ export default function TournamentPlayersScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { wizard, setWizardPlayers } = useTournament();
+
+  // Redirect to team selection screen for groups_ko mode
+  useEffect(() => {
+    if (wizard.type === 'groups_ko') {
+      router.replace('/tournament-teams' as any);
+    }
+  }, [wizard.type]);
   const t = useT();
   const [players, setPlayers] = useState<string[]>(wizard.players);
   const [inputValue, setInputValue] = useState('');

@@ -70,6 +70,11 @@ export interface Tournament {
   currentRound: number;
   finished: boolean;
   firebaseId?: string;
+  // Groups KO specific
+  teams?: Team[];
+  groups?: Group[];
+  koBracket?: KOBracket;
+  groupPhaseComplete?: boolean;
 }
 
 export interface TournamentHistoryItem {
@@ -86,5 +91,46 @@ export interface WizardState {
   type: TournamentType | null;
   settings: Partial<TournamentSettings>;
   players: string[];
+  teams?: Team[];           // for groups_ko mode
   tournamentName: string;
+}
+
+/** A fixed pair of two players for Groups KO */
+export interface Team {
+  id: string;
+  name: string;        // e.g. "Team 1" or custom name
+  player1: string;
+  player2: string;
+}
+
+/** A group in the group phase */
+export interface Group {
+  id: string;
+  name: string;        // "Gruppe A", "Gruppe B", ...
+  teams: Team[];
+  courtId: string;
+  courtName: string;
+  matches: Match[];    // round-robin matches within this group
+}
+
+/** A single KO match in the bracket */
+export interface KOMatch {
+  id: string;
+  round: string;       // e.g. "Achtelfinale", "Viertelfinale", "Halbfinale", "Finale"
+  roundIndex: number;  // 0 = first KO round, increases toward final
+  matchIndex: number;  // position within the round
+  team1: Team | null;  // null = TBD
+  team2: Team | null;
+  score1: number | null;
+  score2: number | null;
+  sets?: SetScore[];
+  winner?: Team;
+  courtId?: string;
+  courtName?: string;
+}
+
+/** Full KO bracket */
+export interface KOBracket {
+  rounds: string[];    // ordered round names
+  matches: KOMatch[];
 }

@@ -20,6 +20,7 @@ import {
   estimateDuration,
   getAutoRounds,
 } from '@/lib/tournament';
+import { createGroupsKOTournament } from '@/lib/groupsKO';
 import { addSavedPlayers } from '@/lib/storage';
 import type { TournamentSettings } from '@/types';
 
@@ -50,7 +51,8 @@ export default function TournamentSummaryScreen() {
   const { wizard, saveTournament } = useTournament();
   const t = useT();
 
-  const { type, settings, players } = wizard;
+  const { type, settings, players, teams } = wizard;
+  const isGroupsKO = type === 'groups_ko';
   const s = settings as TournamentSettings;
   const activeCourts = (s.courts ?? []).filter((c) => c.active);
   const rounds = s.numRounds === 0 ? getAutoRounds(players.length) : (s.numRounds ?? 0);
@@ -82,6 +84,30 @@ export default function TournamentSummaryScreen() {
       scoringMode: s.scoringMode ?? 'americano',
       superTiebreakPoints: s.superTiebreakPoints ?? 10,
     };
+
+    if (type === 'groups_ko' && wizard.teams && wizard.teams.length >= 3) {
+      // Groups KO: use team-based tournament creation
+      const activeCourts = fullSettings.courts.filter((c) => c.active);
+      const baseTournament = createTournament(players, fullSettings, wizard.tournamentName);
+      const { groups, koBracket } = createGroupsKOTournament(
+        wizard.teams,
+        activeCourts,
+        baseTournament.id,
+        baseTournament.name,
+      );
+      const groupsTournament = {
+        ...baseTournament,
+        teams: wizard.teams,
+        groups,
+        koBracket,
+        groupPhaseComplete: false,
+      };
+      await addSavedPlayers(players);
+      await saveTournament(groupsTournament);
+      router.replace('/tournament-groups' as any);
+      return;
+    }
+
     const tournament = createTournament(players, fullSettings, wizard.tournamentName);
     await addSavedPlayers(players);
     await saveTournament(tournament);
@@ -117,21 +143,37 @@ export default function TournamentSummaryScreen() {
           ))}
         </View>
 
-        {/* Players */}
+        {/* Players / Teams */}
         <View style={styles.card}>
           <Text style={styles.cardTitle}>
-            {players.length} {t('players')}
+            {isGroupsKO && teams ? `${teams.length} Teams` : `${players.length} ${t('players')}`}
           </Text>
-          <View style={styles.playersGrid}>
-            {players.map((name, idx) => (
-              <View key={idx} style={styles.playerItem}>
-                <Avatar name={name} size="md" />
-                <Text style={styles.playerName} numberOfLines={1}>
-                  {name}
-                </Text>
-              </View>
-            ))}
-          </View>
+          {isGroupsKO && teams ? (
+            <View style={styles.teamsGrid}>
+              {teams.map((team, idx) => (
+                <View key={team.id} style={styles.teamSummaryItem}>
+                  <View style={styles.teamSummaryBadge}>
+                    <Text style={styles.teamSummaryBadgeText}>{idx + 1}</Text>
+                  </View>
+                  <View style={styles.teamSummaryInfo}>
+                    <Text style={styles.teamSummaryName}>{team.name}</Text>
+                    <Text style={styles.teamSummaryPlayers}>{team.player1} & {team.player2}</Text>
+                  </View>
+                </View>
+              ))}
+            </View>
+          ) : (
+            <View style={styles.playersGrid}>
+              {players.map((name, idx) => (
+                <View key={idx} style={styles.playerItem}>
+                  <Avatar name={name} size="md" />
+                  <Text style={styles.playerName} numberOfLines={1}>
+                    {name}
+                  </Text>
+                </View>
+              ))}
+            </View>
+          )}
         </View>
       </ScrollView>
 
@@ -232,4 +274,27 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
   createBtnText: { color: '#ffffff', fontSize: 16, fontWeight: '700' },
+
+  // Teams grid (groups_ko)
+  teamsGrid: { gap: 8 },
+  teamSummaryItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    paddingVertical: 6,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(0,0,0,0.06)',
+  },
+  teamSummaryBadge: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: '#1a9e6f',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  teamSummaryBadgeText: { color: '#fff', fontSize: 13, fontWeight: '700' },
+  teamSummaryInfo: { flex: 1 },
+  teamSummaryName: { fontSize: 14, fontWeight: '700', color: '#111' },
+  teamSummaryPlayers: { fontSize: 12, color: '#6b7280', marginTop: 1 },
 });

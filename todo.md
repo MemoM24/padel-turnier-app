@@ -152,3 +152,14 @@
 - [x] Neuer Spielmodus: Super-Tiebreak (1 Satz bis X Punkte, Standard 10)
 - [x] Ergebniseingabe: Satz-Eingabe (1. Satz, 2. Satz, 3. Satz ausgegraut bis nötig) für Klassisch
 - [x] Tabellen-Berechnung: Satzgewinn vs. Punktegewinn je nach Modus
+
+## Gruppen-KO Modus v1
+- [x] Typen: Team-Interface (id, name, player1, player2), Group-Interface (id, name, teams, matches, court)
+- [x] Typen: KOBracket-Interface (rounds: KORound[], matches: KOMatch[])
+- [x] Spieler-Screen: Team-Eingabe-Modus für Gruppen-KO (2 Spieler pro Team, Teamname optional)
+- [x] Algorithmus: Gruppen-Bildung (min. 3 Teams/Gruppe, nach Spieleranzahl + Courts)
+- [x] Algorithmus: Round-Robin innerhalb Gruppe (jedes Team gegen jedes andere, fester Court)
+- [x] Algorithmus: KO-Bracket aus Gruppensieger/Zweiten (Achtelfinale/Viertelfinale/Halbfinale/Finale)
+- [x] Match-Screen: Gruppen-Tab-Ansicht (Gruppe A, B, C...) mit Gruppenstand
+- [x] Match-Screen: KO-Bracket-Ansicht als Turnierbaum (visuell)
+- [x] Match-Screen: Automatischer Übergang Gruppenphase → KO-Phase

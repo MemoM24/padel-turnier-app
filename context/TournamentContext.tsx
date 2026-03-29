@@ -15,6 +15,7 @@ interface TournamentContextValue {
   setWizardType: (type: TournamentType) => void;
   setWizardSettings: (settings: Partial<TournamentSettings>) => void;
   setWizardPlayers: (players: string[]) => void;
+  setWizardTeams: (teams: import('@/types').Team[]) => void;
   setWizardName: (name: string) => void;
   resetWizard: () => void;
 
@@ -80,6 +81,12 @@ export function TournamentProvider({ children }: { children: ReactNode }) {
     setWizard((prev) => ({ ...prev, players }));
   }, []);
 
+  const setWizardTeams = useCallback((teams: import('@/types').Team[]) => {
+    // Also derive flat player list from teams
+    const players = teams.flatMap((t) => [t.player1, t.player2]);
+    setWizard((prev) => ({ ...prev, teams, players }));
+  }, []);
+
   const setWizardName = useCallback((tournamentName: string) => {
     setWizard((prev) => ({ ...prev, tournamentName }));
   }, []);
@@ -106,6 +113,7 @@ export function TournamentProvider({ children }: { children: ReactNode }) {
         setWizardType,
         setWizardSettings,
         setWizardPlayers,
+        setWizardTeams,
         setWizardName,
         resetWizard,
         language,
