@@ -14,6 +14,8 @@ import {
   Platform,
 } from 'react-native';
 import { QRModal } from '@/components/QRModal';
+import { useOnboarding } from '@/context/OnboardingContext';
+import { TooltipOverlay } from '@/components/TooltipOverlay';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTournament } from '@/context/TournamentContext';
@@ -393,6 +395,15 @@ export default function TournamentMatchesScreen() {
   }>({ visible: false, matchId: '', team: 1, teamLabel: '', opponentLabel: '', currentScore: null });
   const [timerVisible, setTimerVisible] = useState(false);
   const [qrVisible, setQrVisible] = useState(false);
+  const { isScreenDone, markScreenDone } = useOnboarding();
+  const [showTooltip, setShowTooltip] = useState(false);
+
+  useEffect(() => {
+    if (!isScreenDone('tournament_matches')) {
+      const timer = setTimeout(() => setShowTooltip(true), 600);
+      return () => clearTimeout(timer);
+    }
+  }, []);
 
 
   if (!tournament) {
@@ -696,6 +707,37 @@ export default function TournamentMatchesScreen() {
         tournamentId={tournament.id}
         tournamentName={tournament.name}
         onClose={() => setQrVisible(false)}
+      />
+
+      {/* Onboarding Tooltip */}
+      <TooltipOverlay
+        visible={showTooltip}
+        steps={[
+          {
+            icon: '🎾',
+            title: 'Dein Turnier läuft!',
+            body: 'Hier siehst du alle Matches der aktuellen Runde. Tippe auf ein Ergebnis-Feld um die Punkte einzutragen.',
+          },
+          {
+            icon: '📊',
+            title: 'Tabelle & Spielplan',
+            body: 'Wechsle oben zwischen Spielplan und Tabelle. Die Tabelle zeigt Punkte, Spiele und Durchschnitt aller Spieler.',
+          },
+          {
+            icon: '📱',
+            title: 'Live-Ansicht teilen',
+            body: 'Mit dem QR-Code-Button oben kannst du einen Link teilen. Zuschauer sehen die Tabelle live im Browser – ohne App-Download.',
+          },
+          {
+            icon: '⏱️',
+            title: 'Timer',
+            body: 'Der Timer-Button startet einen Countdown für die Spielzeit. Ideal wenn ihr nach Zeit und nicht nach Punkten spielt.',
+          },
+        ]}
+        onDone={() => {
+          setShowTooltip(false);
+          markScreenDone('tournament_matches');
+        }}
       />
 
     </View>

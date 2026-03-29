@@ -124,3 +124,11 @@
 - [x] Sprachumschalter: Flaggen-Emoji statt DE/EN Text (🇩🇪 / 🇬🇧)
 - [x] Intro-Logo: Weiße Logo-Version (pdl1_logo_white.png) für schwarzen Intro-Hintergrund
 - [x] Home-Screen: Zahnrad/Firebase-Button entfernen, nur Sprachflagge im Header rechts
+
+## Onboarding v1 (Kontextuelle Tooltips)
+- [x] TooltipOverlay-Komponente: Zentrierte Bubble mit Animations, Weiter/Überspringen-Buttons
+- [x] OnboardingContext: AsyncStorage-Flag ob erste Nutzung, pro Screen welche Tooltips gezeigt wurden
+- [x] Home-Screen Tooltip: Willkommen + Turnier starten + Historie + Sprache
+- [x] Turnier-Typ Tooltip: Americano, Mexicano Erklärung
+- [x] Spieler-Screen Tooltip: Spieler eingeben + gespeicherte Spieler + QR einladen
+- [x] Match-Screen Tooltip: Ergebnis eintragen + Tabelle + QR-Live-Ansicht + Timer

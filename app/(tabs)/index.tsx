@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import {
   View,
   Text,
@@ -15,6 +15,8 @@ import { getHistory, loadTournamentById } from '@/lib/storage';
 import { Avatar } from '@/components/Avatar';
 import { t } from '@/i18n';
 import type { TournamentHistoryItem } from '@/types';
+import { useOnboarding } from '@/context/OnboardingContext';
+import { TooltipOverlay } from '@/components/TooltipOverlay';
 
 const TYPE_LABELS: Record<string, string> = {
   americano: '🔄 Americano',
@@ -28,6 +30,16 @@ export default function HomeScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { resetWizard, setTournament, language, toggleLanguage } = useTournament();
+  const { isScreenDone, markScreenDone } = useOnboarding();
+  const [showTooltip, setShowTooltip] = useState(false);
+
+  // Show tooltip on first visit
+  useEffect(() => {
+    if (!isScreenDone('home')) {
+      const timer = setTimeout(() => setShowTooltip(true), 800);
+      return () => clearTimeout(timer);
+    }
+  }, []);
   const [history, setHistory] = useState<TournamentHistoryItem[]>([]);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -158,6 +170,36 @@ export default function HomeScreen() {
             <Text style={styles.emptyText}>{t('noHistory')}</Text>
           </View>
         }
+      />
+
+      <TooltipOverlay
+        visible={showTooltip}
+        steps={[
+          {
+            icon: '🎾',
+            title: 'Willkommen bei PDL1!',
+            body: 'Deine Padel-Turnierverwaltung. Erstelle Turniere, verwalte Spieler und verfolge Ergebnisse – alles in einer App.',
+          },
+          {
+            icon: '➕',
+            title: 'Neues Turnier starten',
+            body: 'Tippe auf den grünen Button um ein neues Turnier zu erstellen. Du kannst zwischen 5 verschiedenen Formaten wählen.',
+          },
+          {
+            icon: '📋',
+            title: 'Turnier-Historie',
+            body: 'Hier erscheinen alle deine Turniere. Tippe auf ein Turnier um es fortzusetzen oder die Ergebnisse anzusehen.',
+          },
+          {
+            icon: '🇩🇪',
+            title: 'Sprache wechseln',
+            body: 'Mit der Flagge oben rechts kannst du jederzeit zwischen Deutsch und Englisch wechseln.',
+          },
+        ]}
+        onDone={() => {
+          setShowTooltip(false);
+          markScreenDone('home');
+        }}
       />
     </View>
   );

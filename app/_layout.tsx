@@ -1,5 +1,6 @@
 import "@/global.css";
 import { TournamentProvider } from "@/context/TournamentContext";
+import { OnboardingProvider } from "@/context/OnboardingContext";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
@@ -82,6 +83,7 @@ export default function RootLayout() {
   }, [initialInsets, initialFrame]);
 
   const content = (
+    <OnboardingProvider>
     <TournamentProvider>
     <View style={{ flex: 1 }}>
     <GestureHandlerRootView style={{ flex: 1 }}>
@@ -108,6 +110,7 @@ export default function RootLayout() {
     {showIntro && <IntroScreen onFinish={() => setShowIntro(false)} />}
     </View>
     </TournamentProvider>
+    </OnboardingProvider>
   );
 
   const shouldOverrideSafeArea = Platform.OS === "web";

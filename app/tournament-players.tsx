@@ -19,6 +19,8 @@ import { Avatar } from '@/components/Avatar';
 import { JoinQRModal } from '@/components/JoinQRModal';
 import { getSavedPlayers } from '@/lib/storage';
 import { t } from '@/i18n';
+import { useOnboarding } from '@/context/OnboardingContext';
+import { TooltipOverlay } from '@/components/TooltipOverlay';
 
 const MIN_PLAYERS = 4;
 
@@ -30,7 +32,16 @@ export default function TournamentPlayersScreen() {
   const [inputValue, setInputValue] = useState('');
   const [savedPlayers, setSavedPlayers] = useState<string[]>([]);
   const [joinQrVisible, setJoinQrVisible] = useState(false);
+  const [showTooltip, setShowTooltip] = useState(false);
+  const { isScreenDone, markScreenDone } = useOnboarding();
   const inputRef = useRef<TextInput>(null);
+
+  useEffect(() => {
+    if (!isScreenDone('tournament_players')) {
+      const timer = setTimeout(() => setShowTooltip(true), 400);
+      return () => clearTimeout(timer);
+    }
+  }, []);
 
   // Generate a temporary tournament ID for the join QR during wizard
   const wizardTournamentId = useRef(`wizard_${Date.now()}`).current;
@@ -163,6 +174,31 @@ export default function TournamentPlayersScreen() {
             </Text>
           </Pressable>
         </View>
+        {/* Onboarding Tooltip */}
+        <TooltipOverlay
+          visible={showTooltip}
+          steps={[
+            {
+              icon: '👥',
+              title: 'Schritt 3: Spieler hinzufügen',
+              body: 'Gib die Namen der Spieler ein und bestätige mit der Enter-Taste oder dem + Button. Mindestens 4 Spieler werden benötigt.',
+            },
+            {
+              icon: '⭐',
+              title: 'Gespeicherte Spieler',
+              body: 'Spieler die du schon mal hinzugefügt hast erscheinen unten als Chips. Einfach antippen um sie direkt hinzuzufügen.',
+            },
+            {
+              icon: '📲',
+              title: 'Spieler per QR einladen',
+              body: 'Mit dem grünen Button oben rechts kannst du einen QR-Code anzeigen. Spieler scannen ihn und du bestätigst ihren Beitritt.',
+            },
+          ]}
+          onDone={() => {
+            setShowTooltip(false);
+            markScreenDone('tournament_players');
+          }}
+        />
         {/* Join QR Modal */}
         <JoinQRModal
           visible={joinQrVisible}

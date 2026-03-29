@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -16,6 +16,8 @@ import { StepIndicator } from '@/components/StepIndicator';
 import { AppHeader } from '@/components/AppHeader';
 import { t, type TranslationKey } from '@/i18n';
 import type { TournamentType } from '@/types';
+import { useOnboarding } from '@/context/OnboardingContext';
+import { TooltipOverlay } from '@/components/TooltipOverlay';
 
 const TYPES: { type: TournamentType; emoji: string; titleKey: TranslationKey; descKey: TranslationKey }[] = [
   { type: 'americano', emoji: '🔄', titleKey: 'typeAmericano', descKey: 'typeAmericanoDesc' },
@@ -29,6 +31,15 @@ export default function TournamentTypeScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { wizard, setWizardType, setWizardName } = useTournament();
+  const { isScreenDone, markScreenDone } = useOnboarding();
+  const [showTooltip, setShowTooltip] = useState(false);
+
+  useEffect(() => {
+    if (!isScreenDone('tournament_type')) {
+      const timer = setTimeout(() => setShowTooltip(true), 400);
+      return () => clearTimeout(timer);
+    }
+  }, []);
   const [selected, setSelected] = useState<TournamentType | null>(wizard.type);
   const [name, setName] = useState(wizard.tournamentName ?? '');
 
@@ -125,6 +136,30 @@ export default function TournamentTypeScreen() {
             <Text style={styles.hintText}>Bitte Turniernamen eingeben (min. 2 Zeichen)</Text>
           )}
         </View>
+      <TooltipOverlay
+        visible={showTooltip}
+        steps={[
+          {
+            icon: '🎾',
+            title: 'Schritt 1: Turnierformat',
+            body: 'Gib deinem Turnier zuerst einen Namen. Dann wähle das passende Format – z.B. Americano für lockere Runden oder Mexicano für dynamische Partnerauswahl.',
+          },
+          {
+            icon: '🔄',
+            title: 'Americano',
+            body: 'Jeder spielt mit jedem zusammen. Die Paare rotieren nach jeder Runde automatisch. Ideal für Gruppen von 8–16 Spielern.',
+          },
+          {
+            icon: '⚡',
+            title: 'Mexicano',
+            body: 'Paare werden nach Punktestand gebildet – starke Spieler spielen gegen starke. Sehr spannend und kompetitiv!',
+          },
+        ]}
+        onDone={() => {
+          setShowTooltip(false);
+          markScreenDone('tournament_type');
+        }}
+      />
       </View>
     </KeyboardAvoidingView>
   );
