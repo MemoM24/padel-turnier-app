@@ -145,3 +145,10 @@
 ## Verbesserungen v6
 - [x] Sprachumschaltung: useT() Hook ersetzt statisches t() – alle Komponenten rendern bei Sprachwechsel neu
 - [x] Bug: Alert.prompt crash beim Hinzufügen von Courts – durch inline TextInput mit ✓/✕ Buttons ersetzt
+
+## Verbesserungen v7 – Spielmodi
+- [x] Neuer Spielmodus: Americano (Gesamtpunkte bis X) – wie bisher
+- [x] Neuer Spielmodus: Klassisch (Sätze bis 6, Tiebreak bei 6:6 bis 7, 3. Satz bei 1:1 Sätzen)
+- [x] Neuer Spielmodus: Super-Tiebreak (1 Satz bis X Punkte, Standard 10)
+- [x] Ergebniseingabe: Satz-Eingabe (1. Satz, 2. Satz, 3. Satz ausgegraut bis nötig) für Klassisch
+- [x] Tabellen-Berechnung: Satzgewinn vs. Punktegewinn je nach Modus

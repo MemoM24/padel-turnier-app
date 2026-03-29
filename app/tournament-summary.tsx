@@ -79,6 +79,8 @@ export default function TournamentSummaryScreen() {
       gameMode: s.gameMode ?? 'points',
       gameTimeMinutes: s.gameTimeMinutes ?? 10,
       courts: s.courts ?? [],
+      scoringMode: s.scoringMode ?? 'americano',
+      superTiebreakPoints: s.superTiebreakPoints ?? 10,
     };
     const tournament = createTournament(players, fullSettings, wizard.tournamentName);
     await addSavedPlayers(players);

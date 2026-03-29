@@ -30,7 +30,163 @@ import {
   getStandings,
   getAverage,
 } from '@/lib/tournament';
-import type { Match, Player } from '@/types';
+import type { Match, Player, SetScore } from '@/types';
+
+// ─── Classic Score Modal (Set-based) ────────────────────────────────────────
+/**
+ * For Classic mode: enter scores for Set 1, Set 2, and optionally Set 3.
+ * Set 3 is only enabled when each team has won exactly 1 set.
+ * Returns sets array + derived score1/score2 (sets won by each team).
+ */
+function ClassicScoreModal({
+  visible,
+  teamLabel,
+  opponentLabel,
+  currentSets,
+  onSelect,
+  onClose,
+}: {
+  visible: boolean;
+  teamLabel: string;
+  opponentLabel: string;
+  currentSets?: { s1: number | null; s2: number | null }[];
+  onSelect: (sets: { s1: number | null; s2: number | null }[], score1: number, score2: number) => void;
+  onClose: () => void;
+}) {
+  const t = useT();
+  const emptySet = { s1: null as number | null, s2: null as number | null };
+  const [sets, setSets] = useState<{ s1: number | null; s2: number | null }[]>(
+    currentSets ?? [{ ...emptySet }, { ...emptySet }, { ...emptySet }],
+  );
+
+  useEffect(() => {
+    if (visible) {
+      setSets(currentSets ?? [{ ...emptySet }, { ...emptySet }, { ...emptySet }]);
+    }
+  }, [visible]);
+
+  // Determine if set3 is needed: each team won 1 set
+  const set1Done = sets[0].s1 !== null && sets[0].s2 !== null;
+  const set2Done = sets[1].s1 !== null && sets[1].s2 !== null;
+  const team1WonSet1 = set1Done && (sets[0].s1 ?? 0) > (sets[0].s2 ?? 0);
+  const team2WonSet1 = set1Done && (sets[0].s2 ?? 0) > (sets[0].s1 ?? 0);
+  const team1WonSet2 = set2Done && (sets[1].s1 ?? 0) > (sets[1].s2 ?? 0);
+  const team2WonSet2 = set2Done && (sets[1].s2 ?? 0) > (sets[1].s1 ?? 0);
+  const needsSet3 = set1Done && set2Done && (
+    (team1WonSet1 && team2WonSet2) || (team2WonSet1 && team1WonSet2)
+  );
+
+  const updateSet = (setIdx: number, side: 's1' | 's2', val: string) => {
+    const num = val === '' ? null : parseInt(val, 10);
+    setSets((prev) => {
+      const next = [...prev];
+      next[setIdx] = { ...next[setIdx], [side]: isNaN(num as number) ? null : num };
+      return next;
+    });
+  };
+
+  const handleConfirm = () => {
+    // Validate: set 1 and set 2 must be filled
+    if (!set1Done || !set2Done) {
+      return;
+    }
+    if (needsSet3 && (sets[2].s1 === null || sets[2].s2 === null)) {
+      return;
+    }
+    // Calculate sets won
+    let score1 = 0;
+    let score2 = 0;
+    const activeSets = needsSet3 ? sets : sets.slice(0, 2);
+    for (const s of activeSets) {
+      if (s.s1 !== null && s.s2 !== null) {
+        if (s.s1 > s.s2) score1++;
+        else if (s.s2 > s.s1) score2++;
+      }
+    }
+    onSelect(needsSet3 ? sets : [sets[0], sets[1], emptySet], score1, score2);
+    onClose();
+  };
+
+  const isConfirmable = set1Done && set2Done && (!needsSet3 || (sets[2].s1 !== null && sets[2].s2 !== null));
+
+  const SetInput = ({ setIdx, label, disabled }: { setIdx: number; label: string; disabled?: boolean }) => (
+    <View style={[styles.classicSetRow, disabled && { opacity: 0.35 }]}>
+      <Text style={styles.classicSetLabel}>{label}</Text>
+      <View style={styles.classicSetInputs}>
+        <TextInput
+          style={[styles.classicSetInput, disabled && styles.classicSetInputDisabled]}
+          value={sets[setIdx].s1 !== null ? String(sets[setIdx].s1) : ''}
+          onChangeText={(v) => updateSet(setIdx, 's1', v)}
+          keyboardType="number-pad"
+          placeholder="0"
+          placeholderTextColor="#aaa"
+          editable={!disabled}
+          maxLength={2}
+        />
+        <Text style={styles.classicSetSep}>:</Text>
+        <TextInput
+          style={[styles.classicSetInput, disabled && styles.classicSetInputDisabled]}
+          value={sets[setIdx].s2 !== null ? String(sets[setIdx].s2) : ''}
+          onChangeText={(v) => updateSet(setIdx, 's2', v)}
+          keyboardType="number-pad"
+          placeholder="0"
+          placeholderTextColor="#aaa"
+          editable={!disabled}
+          maxLength={2}
+        />
+      </View>
+    </View>
+  );
+
+  return (
+    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={styles.modalOverlay}
+      >
+        <Pressable style={styles.modalOverlay} onPress={onClose}>
+          <Pressable style={styles.modalSheet} onPress={(e) => e.stopPropagation()}>
+            <View style={styles.modalHandle} />
+            <Text style={styles.modalTitle}>{t('enterScore')}</Text>
+
+            {/* Team labels */}
+            <View style={styles.classicTeamHeader}>
+              <Text style={styles.classicTeamName} numberOfLines={1}>{teamLabel}</Text>
+              <Text style={styles.classicVs}>vs</Text>
+              <Text style={[styles.classicTeamName, { textAlign: 'right' }]} numberOfLines={1}>{opponentLabel}</Text>
+            </View>
+
+            <Text style={styles.classicHint}>{t('classicScoreHint')}</Text>
+
+            <SetInput setIdx={0} label={t('set1')} />
+            <SetInput setIdx={1} label={t('set2')} />
+            <SetInput setIdx={2} label={t('set3')} disabled={!needsSet3} />
+
+            <View style={styles.customActions}>
+              <Pressable
+                style={({ pressed }) => [styles.cancelBtn, pressed && { opacity: 0.7 }]}
+                onPress={onClose}
+              >
+                <Text style={styles.cancelBtnText}>{t('cancel')}</Text>
+              </Pressable>
+              <Pressable
+                style={({ pressed }) => [
+                  styles.confirmBtn,
+                  !isConfirmable && styles.confirmBtnDisabled,
+                  pressed && isConfirmable && { opacity: 0.85 },
+                ]}
+                onPress={handleConfirm}
+                disabled={!isConfirmable}
+              >
+                <Text style={styles.confirmBtnText}>{t('confirm')}</Text>
+              </Pressable>
+            </View>
+          </Pressable>
+        </Pressable>
+      </KeyboardAvoidingView>
+    </Modal>
+  );
+}
 
 // ─── Score Modal (Padelmix-style) ─────────────────────────────────────────────
 /**
@@ -317,43 +473,81 @@ function MatchCard({
   match,
   scores,
   onScorePress,
+  scoringMode,
 }: {
   match: Match;
-  scores: Record<string, { s1: number | null; s2: number | null }>;
+  scores: Record<string, { s1: number | null; s2: number | null; sets?: SetScore[] }>;
   onScorePress: (matchId: string, team: 1 | 2) => void;
+  scoringMode?: string;
 }) {
   const s = scores[match.id] ?? { s1: null, s2: null };
   const hasScore = s.s1 !== null && s.s2 !== null;
+  const isClassic = scoringMode === 'classic';
+
+  // For classic mode: show set scores inline
+  const setDisplay = isClassic && s.sets
+    ? s.sets
+        .filter((set) => set.s1 !== null && set.s2 !== null)
+        .map((set) => `${set.s1}:${set.s2}`)
+        .join('  ')
+    : null;
 
   return (
     <View style={[styles.matchCard, hasScore && styles.matchCardDone]}>
-      {/* Score buttons centered at top */}
-      <View style={styles.matchScoreRow}>
-        <Pressable
-          style={({ pressed }) => [
-            styles.scoreBtn,
-            s.s1 !== null && styles.scoreBtnFilled,
-            pressed && { opacity: 0.7 },
-          ]}
-          onPress={() => onScorePress(match.id, 1)}
-        >
-          <Text style={[styles.scoreBtnText, s.s1 !== null && styles.scoreBtnTextFilled]}>
-            {s.s1 !== null ? String(s.s1).padStart(2, '0') : '00'}
-          </Text>
-        </Pressable>
-        <Pressable
-          style={({ pressed }) => [
-            styles.scoreBtn,
-            s.s2 !== null && styles.scoreBtnFilled,
-            pressed && { opacity: 0.7 },
-          ]}
-          onPress={() => onScorePress(match.id, 2)}
-        >
-          <Text style={[styles.scoreBtnText, s.s2 !== null && styles.scoreBtnTextFilled]}>
-            {s.s2 !== null ? String(s.s2).padStart(2, '0') : '00'}
-          </Text>
-        </Pressable>
-      </View>
+      {/* Score area */}
+      <Pressable
+        style={({ pressed }) => [styles.matchScoreRow, pressed && { opacity: 0.8 }]}
+        onPress={() => onScorePress(match.id, 1)}
+      >
+        {isClassic ? (
+          // Classic: show sets won + set details
+          <View style={styles.classicMatchScoreArea}>
+            <View style={styles.classicMatchSetsWon}>
+              <Text style={[styles.scoreBtnText, hasScore && styles.scoreBtnTextFilled]}>
+                {s.s1 !== null ? String(s.s1) : '—'}
+              </Text>
+              <Text style={styles.classicMatchColon}>:</Text>
+              <Text style={[styles.scoreBtnText, hasScore && styles.scoreBtnTextFilled]}>
+                {s.s2 !== null ? String(s.s2) : '—'}
+              </Text>
+            </View>
+            {setDisplay && (
+              <Text style={styles.classicMatchSetDetail}>{setDisplay}</Text>
+            )}
+            {!hasScore && (
+              <Text style={styles.classicMatchTapHint}>Tippen zum Eingeben</Text>
+            )}
+          </View>
+        ) : (
+          // Americano / Super-Tiebreak: two separate buttons
+          <>
+            <Pressable
+              style={({ pressed }) => [
+                styles.scoreBtn,
+                s.s1 !== null && styles.scoreBtnFilled,
+                pressed && { opacity: 0.7 },
+              ]}
+              onPress={() => onScorePress(match.id, 1)}
+            >
+              <Text style={[styles.scoreBtnText, s.s1 !== null && styles.scoreBtnTextFilled]}>
+                {s.s1 !== null ? String(s.s1).padStart(2, '0') : '00'}
+              </Text>
+            </Pressable>
+            <Pressable
+              style={({ pressed }) => [
+                styles.scoreBtn,
+                s.s2 !== null && styles.scoreBtnFilled,
+                pressed && { opacity: 0.7 },
+              ]}
+              onPress={() => onScorePress(match.id, 2)}
+            >
+              <Text style={[styles.scoreBtnText, s.s2 !== null && styles.scoreBtnTextFilled]}>
+                {s.s2 !== null ? String(s.s2).padStart(2, '0') : '00'}
+              </Text>
+            </Pressable>
+          </>
+        )}
+      </Pressable>
 
       {/* Teams left and right */}
       <View style={styles.matchTeams}>
@@ -388,7 +582,16 @@ export default function TournamentMatchesScreen() {
   const t = useT();
 
   const [activeTab, setActiveTab] = useState<'matches' | 'standings'>('matches');
-  const [scores, setScores] = useState<Record<string, { s1: number | null; s2: number | null }>>({});
+  // scores: for americano/supertiebreak: s1/s2 are total points/sets won
+  // for classic: s1/s2 are sets won, sets[] contains individual set scores
+  const [scores, setScores] = useState<Record<string, { s1: number | null; s2: number | null; sets?: SetScore[] }>>({});
+  const [classicModal, setClassicModal] = useState<{
+    visible: boolean;
+    matchId: string;
+    teamLabel: string;
+    opponentLabel: string;
+    currentSets?: SetScore[];
+  }>({ visible: false, matchId: '', teamLabel: '', opponentLabel: '' });
   const [selectedRound, setSelectedRound] = useState<number | null>(null); // null = current round
   const [scoreModal, setScoreModal] = useState<{
     visible: boolean;
@@ -434,6 +637,9 @@ export default function TournamentMatchesScreen() {
       ? Math.max(tournament.players.length - 1, 4)
       : tournament.settings.numRounds;
 
+  const scoringMode = tournament.settings.scoringMode ?? 'americano';
+  const superTiebreakPoints = tournament.settings.superTiebreakPoints ?? 10;
+
   const allScoresEntered =
     !isViewingPastRound &&
     (currentRound?.matches.every((m) => {
@@ -447,9 +653,22 @@ export default function TournamentMatchesScreen() {
     if (isViewingPastRound) return; // read-only for past rounds
     const match = currentRound?.matches.find((m) => m.id === matchId);
     if (!match) return;
-    const teamNames = team === 1 ? match.team1 : match.team2;
-    const oppNames = team === 1 ? match.team2 : match.team1;
+    const teamNames = match.team1;
+    const oppNames = match.team2;
     const s = scores[matchId];
+
+    if (scoringMode === 'classic') {
+      // Classic mode: open the set-based modal (always team1 vs team2)
+      setClassicModal({
+        visible: true,
+        matchId,
+        teamLabel: teamNames.join(' & '),
+        opponentLabel: oppNames.join(' & '),
+        currentSets: s?.sets as SetScore[] | undefined,
+      });
+      return;
+    }
+
     setScoreModal({
       visible: true,
       matchId,
@@ -460,17 +679,22 @@ export default function TournamentMatchesScreen() {
     });
   };
 
-  // When a score is selected, automatically set both team and opponent scores
+  // Americano / Super-Tiebreak: auto-calculate opponent score
   const handleScoreSelect = (teamScore: number, opponentScore: number) => {
     const { matchId, team } = scoreModal;
     setScores((prev) => {
-      const existing = prev[matchId] ?? { s1: null, s2: null };
       if (team === 1) {
         return { ...prev, [matchId]: { s1: teamScore, s2: opponentScore } };
       } else {
         return { ...prev, [matchId]: { s1: opponentScore, s2: teamScore } };
       }
     });
+  };
+
+  // Classic mode: receive sets array + derived sets-won counts
+  const handleClassicScoreSelect = (sets: SetScore[], score1: number, score2: number) => {
+    const { matchId } = classicModal;
+    setScores((prev) => ({ ...prev, [matchId]: { s1: score1, s2: score2, sets } }));
   };
 
   const handleSaveRound = async () => {
@@ -481,7 +705,7 @@ export default function TournamentMatchesScreen() {
 
     const scoreList = currentRound.matches.map((m) => {
       const s = scores[m.id]!;
-      return { matchId: m.id, score1: s.s1!, score2: s.s2! };
+      return { matchId: m.id, score1: s.s1!, score2: s.s2!, sets: s.sets };
     });
 
     let updated = applyRoundScores(tournament, currentRoundIndex, scoreList);
@@ -520,7 +744,7 @@ export default function TournamentMatchesScreen() {
     // First save current round scores
     const scoreList = currentRound.matches.map((m) => {
       const s = scores[m.id]!;
-      return { matchId: m.id, score1: s.s1!, score2: s.s2! };
+      return { matchId: m.id, score1: s.s1!, score2: s.s2!, sets: s.sets };
     });
     let updated = applyRoundScores(tournament, currentRoundIndex, scoreList);
     const extraRound = generateExtraRound(updated);
@@ -542,7 +766,7 @@ export default function TournamentMatchesScreen() {
     // First save current round scores
     const scoreList = currentRound.matches.map((m) => {
       const s = scores[m.id]!;
-      return { matchId: m.id, score1: s.s1!, score2: s.s2! };
+      return { matchId: m.id, score1: s.s1!, score2: s.s2!, sets: s.sets };
     });
     let updated = applyRoundScores(tournament, currentRoundIndex, scoreList);
     const finalRound = generateFinalRound(updated);
@@ -652,10 +876,10 @@ export default function TournamentMatchesScreen() {
   );
 
   // Build read-only scores map from saved round data (for past rounds)
-  const pastRoundScores: Record<string, { s1: number | null; s2: number | null }> = {};
+  const pastRoundScores: Record<string, { s1: number | null; s2: number | null; sets?: SetScore[] }> = {};
   if (isViewingPastRound && viewingRound) {
     for (const m of viewingRound.matches) {
-      pastRoundScores[m.id] = { s1: m.score1, s2: m.score2 };
+      pastRoundScores[m.id] = { s1: m.score1, s2: m.score2, sets: m.sets };
     }
   }
   const displayScores = isViewingPastRound ? pastRoundScores : scores;
@@ -684,7 +908,7 @@ export default function TournamentMatchesScreen() {
         </View>
       }
       renderItem={({ item }) => (
-        <MatchCard match={item} scores={displayScores} onScorePress={openScoreModal} />
+        <MatchCard match={item} scores={displayScores} onScorePress={openScoreModal} scoringMode={scoringMode} />
       )}
       ListFooterComponent={
         viewingRound?.byePlayers?.length ? (
@@ -758,15 +982,25 @@ export default function TournamentMatchesScreen() {
         </View>
       )}
 
-      {/* Score Modal */}
+      {/* Score Modal – Americano / Super-Tiebreak */}
       <ScoreModal
         visible={scoreModal.visible}
         teamLabel={scoreModal.teamLabel}
         opponentLabel={scoreModal.opponentLabel}
         currentScore={scoreModal.currentScore}
-        pointsPerRound={pointsPerRound}
+        pointsPerRound={scoringMode === 'supertiebreak' ? superTiebreakPoints : pointsPerRound}
         onSelect={handleScoreSelect}
         onClose={() => setScoreModal((prev) => ({ ...prev, visible: false }))}
+      />
+
+      {/* Classic Score Modal – Set-based */}
+      <ClassicScoreModal
+        visible={classicModal.visible}
+        teamLabel={classicModal.teamLabel}
+        opponentLabel={classicModal.opponentLabel}
+        currentSets={classicModal.currentSets}
+        onSelect={handleClassicScoreSelect}
+        onClose={() => setClassicModal((prev) => ({ ...prev, visible: false }))}
       />
 
       {/* Timer Overlay */}
@@ -1202,4 +1436,102 @@ const styles = StyleSheet.create({
   },
   timerBtnStop: { backgroundColor: 'rgba(0,0,0,0.2)' },
   timerBtnText: { color: '#ffffff', fontSize: 15, fontWeight: '600' },
+
+  // Classic Score Modal
+  classicTeamHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 4,
+    gap: 8,
+  },
+  classicTeamName: {
+    flex: 1,
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#ffffff',
+  },
+  classicVs: {
+    fontSize: 13,
+    color: '#9BA1A6',
+    fontWeight: '600',
+    paddingHorizontal: 4,
+  },
+  classicHint: {
+    fontSize: 12,
+    color: '#9BA1A6',
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  classicSetRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 10,
+    gap: 12,
+  },
+  classicSetLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#ffffff',
+    width: 50,
+  },
+  classicSetInputs: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    flex: 1,
+    justifyContent: 'flex-end',
+  },
+  classicSetInput: {
+    width: 56,
+    height: 48,
+    backgroundColor: '#2a2a2a',
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#444',
+    color: '#fff',
+    fontSize: 20,
+    fontWeight: '700',
+    textAlign: 'center',
+    fontVariant: ['tabular-nums'],
+  },
+  classicSetInputDisabled: {
+    backgroundColor: '#1a1a1a',
+    borderColor: '#2a2a2a',
+    color: '#555',
+  },
+  classicSetSep: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#9BA1A6',
+  },
+
+  // Classic match card score display
+  classicMatchScoreArea: {
+    flex: 1,
+    alignItems: 'center',
+    gap: 4,
+  },
+  classicMatchSetsWon: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  classicMatchColon: {
+    fontSize: 22,
+    fontWeight: '700',
+    color: '#9BA1A6',
+  },
+  classicMatchSetDetail: {
+    fontSize: 12,
+    color: '#9BA1A6',
+    fontVariant: ['tabular-nums'],
+    letterSpacing: 1,
+  },
+  classicMatchTapHint: {
+    fontSize: 11,
+    color: '#555',
+    fontStyle: 'italic',
+  },
 });

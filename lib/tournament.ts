@@ -162,7 +162,7 @@ function generateMexicanoRound(
 export function applyRoundScores(
   tournament: Tournament,
   roundIndex: number,
-  scores: { matchId: string; score1: number; score2: number }[],
+  scores: { matchId: string; score1: number; score2: number; sets?: { s1: number | null; s2: number | null }[] }[],
 ): Tournament {
   const updated = { ...tournament };
   const round = { ...updated.rounds[roundIndex] };
@@ -190,7 +190,7 @@ export function applyRoundScores(
       }
     }
 
-    return { ...match, score1: score.score1, score2: score.score2 };
+    return { ...match, score1: score.score1, score2: score.score2, ...(score.sets ? { sets: score.sets } : {}) };
   });
 
   // Apply bye points

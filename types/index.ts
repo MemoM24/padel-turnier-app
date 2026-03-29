@@ -7,6 +7,9 @@ export type TournamentType =
 
 export type GameMode = 'points' | 'time';
 
+/** How match results are recorded and standings calculated */
+export type ScoringMode = 'americano' | 'classic' | 'supertiebreak';
+
 export interface Player {
   id: string;
   name: string;
@@ -20,14 +23,20 @@ export interface Court {
   active: boolean;
 }
 
+export interface SetScore {
+  s1: number | null; // team1 score for this set
+  s2: number | null; // team2 score for this set
+}
+
 export interface Match {
   id: string;
   courtId: string;
   courtName: string;
   team1: string[];
   team2: string[];
-  score1: number | null;
-  score2: number | null;
+  score1: number | null; // total points / sets won (team1)
+  score2: number | null; // total points / sets won (team2)
+  sets?: SetScore[];     // for classic mode: [set1, set2, set3?]
   isBye?: boolean;
 }
 
@@ -47,6 +56,8 @@ export interface TournamentSettings {
   gameMode: GameMode;
   gameTimeMinutes: number;
   courts: Court[];
+  scoringMode?: ScoringMode;    // 'americano' | 'classic' | 'supertiebreak'
+  superTiebreakPoints?: number; // target points for super-tiebreak (default 10)
 }
 
 export interface Tournament {

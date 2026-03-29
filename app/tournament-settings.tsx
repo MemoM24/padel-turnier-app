@@ -14,7 +14,7 @@ import { useTournament } from '@/context/TournamentContext';
 import { StepIndicator } from '@/components/StepIndicator';
 import { AppHeader } from '@/components/AppHeader';
 import { useT } from '@/hooks/use-t';
-import type { Court, GameMode } from '@/types';
+import type { Court, GameMode, ScoringMode } from '@/types';
 import Svg, { Rect, Line, Circle, Ellipse } from 'react-native-svg';
 
 // Mini padel court icon rendered with SVG
@@ -91,6 +91,8 @@ export default function TournamentSettingsScreen() {
   const [byePoints, setByePoints] = useState(settings.byePoints ?? 0);
   const [gameMode, setGameMode] = useState<GameMode>(settings.gameMode ?? 'points');
   const [gameTimeMinutes, setGameTimeMinutes] = useState(settings.gameTimeMinutes ?? 10);
+  const [scoringMode, setScoringMode] = useState<ScoringMode>(settings.scoringMode ?? 'americano');
+  const [superTiebreakPoints, setSuperTiebreakPoints] = useState(settings.superTiebreakPoints ?? 10);
   const [courts, setCourts] = useState<Court[]>(
     settings.courts ?? [
       { id: 'court1', name: 'Court 1', active: true },
@@ -138,6 +140,8 @@ export default function TournamentSettingsScreen() {
       gameMode,
       gameTimeMinutes,
       courts,
+      scoringMode,
+      superTiebreakPoints,
     });
     router.push('/tournament-players' as any);
   };
@@ -210,6 +214,58 @@ export default function TournamentSettingsScreen() {
               max={60}
               onChange={setGameTimeMinutes}
             />
+          )}
+        </View>
+
+        {/* Scoring Mode */}
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>{t('scoringMode')}</Text>
+          {[
+            { key: 'americano' as ScoringMode, label: t('scoringAmericano'), desc: t('scoringAmericanoDesc') },
+            { key: 'classic' as ScoringMode, label: t('scoringClassic'), desc: t('scoringClassicDesc') },
+            { key: 'supertiebreak' as ScoringMode, label: t('scoringSuperTiebreak'), desc: t('scoringSuperTiebreakDesc') },
+          ].map((mode) => (
+            <Pressable
+              key={mode.key}
+              style={({ pressed }) => [
+                styles.scoringModeRow,
+                scoringMode === mode.key && styles.scoringModeRowActive,
+                pressed && { opacity: 0.7 },
+              ]}
+              onPress={() => setScoringMode(mode.key)}
+            >
+              <View style={[styles.scoringModeRadio, scoringMode === mode.key && styles.scoringModeRadioActive]}>
+                {scoringMode === mode.key && <View style={styles.scoringModeRadioDot} />}
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={[styles.scoringModeLabel, scoringMode === mode.key && styles.scoringModeLabelActive]}>
+                  {mode.label}
+                </Text>
+                <Text style={styles.scoringModeDesc}>{mode.desc}</Text>
+              </View>
+            </Pressable>
+          ))}
+          {scoringMode === 'americano' && (
+            <View style={{ marginTop: 8 }}>
+              <Stepper
+                label={t('pointsPerRound')}
+                value={pointsPerRound}
+                min={4}
+                max={64}
+                onChange={setPointsPerRound}
+              />
+            </View>
+          )}
+          {scoringMode === 'supertiebreak' && (
+            <View style={{ marginTop: 8 }}>
+              <Stepper
+                label={t('superTiebreakPoints')}
+                value={superTiebreakPoints}
+                min={6}
+                max={21}
+                onChange={setSuperTiebreakPoints}
+              />
+            </View>
           )}
         </View>
 
@@ -375,6 +431,51 @@ const styles = StyleSheet.create({
   },
   courtAddIcon: { fontSize: 20, color: '#1a9e6f' },
   courtAddBtnText: { fontSize: 12, fontWeight: '600', color: '#1a9e6f' },
+  scoringModeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 4,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: 'transparent',
+  },
+  scoringModeRowActive: {
+    backgroundColor: '#f0fdf7',
+    borderColor: '#1a9e6f',
+  },
+  scoringModeRadio: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    borderWidth: 2,
+    borderColor: '#9BA1A6',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  scoringModeRadioActive: {
+    borderColor: '#1a9e6f',
+  },
+  scoringModeRadioDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: '#1a9e6f',
+  },
+  scoringModeLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#374151',
+  },
+  scoringModeLabelActive: {
+    color: '#1a9e6f',
+  },
+  scoringModeDesc: {
+    fontSize: 12,
+    color: '#9BA1A6',
+    marginTop: 1,
+  },
   courtInputRow: {
     flexDirection: 'row',
     alignItems: 'center',
