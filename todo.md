@@ -132,3 +132,4 @@
 - [x] Turnier-Typ Tooltip: Americano, Mexicano Erklärung
 - [x] Spieler-Screen Tooltip: Spieler eingeben + gespeicherte Spieler + QR einladen
 - [x] Match-Screen Tooltip: Ergebnis eintragen + Tabelle + QR-Live-Ansicht + Timer
+- [x] Sprachbutton: Schwarzes (DE) / Blaues (EN) Kreis-Badge statt Flaggen-Emoji – funktioniert auf allen Plattformen
