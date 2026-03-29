@@ -163,3 +163,7 @@
 - [x] Match-Screen: Gruppen-Tab-Ansicht (Gruppe A, B, C...) mit Gruppenstand
 - [x] Match-Screen: KO-Bracket-Ansicht als Turnierbaum (visuell)
 - [x] Match-Screen: Automatischer Übergang Gruppenphase → KO-Phase
+
+## Verbesserungen v8
+- [x] Einstellungen: "Punkte oder Zeit" als erste Karte anzeigen
+- [x] Einstellungen: "Punkte pro Runde" ausblenden wenn Zeit-Modus gewählt

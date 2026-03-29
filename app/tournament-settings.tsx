@@ -157,35 +157,7 @@ export default function TournamentSettingsScreen() {
       <StepIndicator currentStep={2} totalSteps={4} />
 
       <ScrollView contentContainerStyle={styles.content}>
-        {/* Points & Rounds */}
-        <View style={styles.card}>
-          <Stepper
-            label={t('pointsPerRound')}
-            value={pointsPerRound}
-            min={4}
-            max={64}
-            onChange={setPointsPerRound}
-          />
-          <View style={styles.divider} />
-          <Stepper
-            label={t('roundsLabel')}
-            value={numRounds}
-            min={0}
-            max={20}
-            onChange={setNumRounds}
-            formatValue={(v) => (v === 0 ? t('auto') : String(v))}
-          />
-          <View style={styles.divider} />
-          <Stepper
-            label={t('byePointsLabel')}
-            value={byePoints}
-            min={0}
-            max={20}
-            onChange={setByePoints}
-          />
-        </View>
-
-        {/* Game Mode */}
+        {/* 1. Game Mode – first card */}
         <View style={styles.card}>
           <Text style={styles.cardTitle}>{t('settingsTitle')}</Text>
           <View style={styles.modeRow}>
@@ -207,14 +179,49 @@ export default function TournamentSettingsScreen() {
             </Pressable>
           </View>
           {gameMode === 'time' && (
-            <Stepper
-              label={t('gameTime')}
-              value={gameTimeMinutes}
-              min={1}
-              max={60}
-              onChange={setGameTimeMinutes}
-            />
+            <>
+              <View style={styles.divider} />
+              <Stepper
+                label={t('gameTime')}
+                value={gameTimeMinutes}
+                min={1}
+                max={60}
+                onChange={setGameTimeMinutes}
+              />
+            </>
           )}
+        </View>
+
+        {/* 2. Rounds & Bye Points (always visible) + Points per Round (only in points mode) */}
+        <View style={styles.card}>
+          {gameMode === 'points' && (
+            <>
+              <Stepper
+                label={t('pointsPerRound')}
+                value={pointsPerRound}
+                min={4}
+                max={64}
+                onChange={setPointsPerRound}
+              />
+              <View style={styles.divider} />
+            </>
+          )}
+          <Stepper
+            label={t('roundsLabel')}
+            value={numRounds}
+            min={0}
+            max={20}
+            onChange={setNumRounds}
+            formatValue={(v) => (v === 0 ? t('auto') : String(v))}
+          />
+          <View style={styles.divider} />
+          <Stepper
+            label={t('byePointsLabel')}
+            value={byePoints}
+            min={0}
+            max={20}
+            onChange={setByePoints}
+          />
         </View>
 
         {/* Scoring Mode */}
