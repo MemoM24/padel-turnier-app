@@ -26,10 +26,22 @@ import {
   buildKOBracket,
   type GroupStanding,
 } from '@/lib/groupsKO';
-import type { Group, KOMatch, Match, Team, SetScore } from '@/types';
+import type { Group, KOMatch, KOBracket, Match, Team, SetScore } from '@/types';
 import { haptic } from '@/lib/haptics';
 
 type TabId = 'groups' | 'schedule' | 'bracket';
+
+// ─── KO Completion Helper ─────────────────────────────────────────────────────
+
+/** Returns true when the final KO match has a winner. */
+function isKOComplete(bracket: KOBracket): boolean {
+  if (!bracket.matches.length) return false;
+  const maxRoundIndex = Math.max(...bracket.matches.map((m) => m.roundIndex));
+  const finalMatch = bracket.matches.find(
+    (m) => m.roundIndex === maxRoundIndex && m.matchIndex === 0,
+  );
+  return !!(finalMatch?.winner);
+}
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -674,6 +686,16 @@ export default function TournamentGroupsScreen() {
       // For KO: pass sets along with score1/score2
       const newBracket = updateKOMatchScore(koBracket, scoreModal.matchId, score1, score2, teams, sets);
       updated = { ...updated, koBracket: newBracket };
+
+      // Check if the final has just been decided → navigate to result screen
+      if (isKOComplete(newBracket)) {
+        // Mark tournament as finished before navigating
+        updated = { ...updated, finished: true };
+        await saveTournament(updated);
+        haptic.success();
+        setTimeout(() => router.push('/tournament-result'), 600);
+        return;
+      }
     } else if (scoreModal.groupId) {
       const newGroups = updateGroupMatchScore(
         groups,

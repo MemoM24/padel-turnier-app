@@ -193,3 +193,10 @@
 - [x] Haptic Feedback: Selection beim Tab-Wechsel (Gruppen / Spielplan / KO-Baum)
 - [x] Haptic Feedback: Success beim Abschluss der Gruppenphase
 - [x] Haptic Feedback: Success beim Bestätigen des Löschens eines Turniers
+
+## Verbesserungen v13 – Turnier-Abschlussseite
+- [x] Abschlussseite: Automatische Anzeige nach letztem KO-Match
+- [x] Abschlussseite: Podium mit 1./2./3. Platz (Sieger, Finalist, Dritter)
+- [x] Abschlussseite: Vollständige Platzierungsliste aller Teams
+- [x] Abschlussseite: Turnier als "beendet" markieren und in Verlauf speichern
+- [x] Abschlussseite: Zurück zur Startseite / Neues Turnier starten

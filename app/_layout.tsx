@@ -98,8 +98,11 @@ export default function RootLayout() {
             <Stack.Screen name="tournament-type" options={{ animation: 'slide_from_right' }} />
             <Stack.Screen name="tournament-settings" options={{ animation: 'slide_from_right' }} />
             <Stack.Screen name="tournament-players" options={{ animation: 'slide_from_right' }} />
+            <Stack.Screen name="tournament-teams" options={{ animation: 'slide_from_right' }} />
             <Stack.Screen name="tournament-summary" options={{ animation: 'slide_from_right' }} />
             <Stack.Screen name="tournament-matches" options={{ animation: 'slide_from_right' }} />
+            <Stack.Screen name="tournament-groups" options={{ animation: 'slide_from_right' }} />
+            <Stack.Screen name="tournament-result" options={{ animation: 'fade' }} />
             <Stack.Screen name="firebase-config" options={{ animation: 'slide_from_right' }} />
             <Stack.Screen name="join" options={{ animation: 'slide_from_right' }} />
           </Stack>
