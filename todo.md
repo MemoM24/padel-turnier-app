@@ -184,3 +184,12 @@
 - [x] Spielplan-Vorschau: Vor Turnierstart Spielreihenfolge pro Gruppe anzeigen
 - [x] Spielplan-Vorschau: Matchnummer, Teams, Court-Zuweisung sichtbar
 - [x] Spielplan-Vorschau: Erreichbar aus SummaryScreen und aus Gruppen-Tab (neuer 'Spielplan'-Tab)
+
+## Verbesserungen v12 – Haptic Feedback
+- [x] Haptic Feedback: Light beim Tippen auf Match-Karten (Gruppen + KO)
+- [x] Haptic Feedback: Success beim Speichern eines Ergebnisses
+- [x] Haptic Feedback: Error beim Versuch ein ungültiges Ergebnis zu speichern
+- [x] Haptic Feedback: Medium beim Swipe-to-Delete (Bestätigung)
+- [x] Haptic Feedback: Selection beim Tab-Wechsel (Gruppen / Spielplan / KO-Baum)
+- [x] Haptic Feedback: Success beim Abschluss der Gruppenphase
+- [x] Haptic Feedback: Success beim Bestätigen des Löschens eines Turniers

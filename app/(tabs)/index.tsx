@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   View,
   Text,
@@ -21,6 +21,7 @@ import { useOnboarding } from '@/context/OnboardingContext';
 import { TooltipOverlay } from '@/components/TooltipOverlay';
 import { FlagIcon } from '@/components/FlagIcon';
 import { useT } from '@/hooks/use-t';
+import { haptic } from '@/lib/haptics';
 
 const TYPE_LABELS: Record<string, string> = {
   americano: '🔄 Americano',
@@ -50,6 +51,7 @@ function SwipeableHistoryCard({
   });
 
   const handleDelete = () => {
+    haptic.medium();
     swipeRef.current?.close();
     Alert.alert(
       'Turnier löschen',
@@ -59,7 +61,10 @@ function SwipeableHistoryCard({
         {
           text: 'Löschen',
           style: 'destructive',
-          onPress: onDelete,
+          onPress: () => {
+            haptic.success();
+            onDelete();
+          },
         },
       ],
     );

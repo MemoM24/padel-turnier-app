@@ -27,6 +27,7 @@ import {
   type GroupStanding,
 } from '@/lib/groupsKO';
 import type { Group, KOMatch, Match, Team, SetScore } from '@/types';
+import { haptic } from '@/lib/haptics';
 
 type TabId = 'groups' | 'schedule' | 'bracket';
 
@@ -136,7 +137,11 @@ function PlaytomicScoreModal({
   }
 
   const handleConfirm = () => {
-    if (!canConfirm) return;
+    if (!canConfirm) {
+      haptic.error();
+      return;
+    }
+    haptic.success();
     const finalSets = needsSet3 ? sets : [sets[0], sets[1], emptySet()];
     const { score1, score2 } = computeResultFromSets(needsSet3 ? sets : sets.slice(0, 2));
     onSave(finalSets, score1, score2);
@@ -632,6 +637,7 @@ export default function TournamentGroupsScreen() {
   const standings = activeGroup ? getGroupStandings(activeGroup, teams) : [];
 
   const openGroupMatchScore = (match: Match, groupId: string) => {
+    haptic.light();
     const t1 = teams.find((t) => t.player1 === match.team1[0] && t.player2 === match.team1[1]);
     const t2 = teams.find((t) => t.player1 === match.team2[0] && t.player2 === match.team2[1]);
     setScoreModal({
@@ -648,6 +654,7 @@ export default function TournamentGroupsScreen() {
   const openKOMatchScore = (match: KOMatch) => {
     // Allow editing even if already played (re-entry)
     if (!match.team1 || !match.team2) return;
+    haptic.light();
     setScoreModal({
       visible: true,
       matchId: match.id,
@@ -680,6 +687,7 @@ export default function TournamentGroupsScreen() {
 
       // Check if group phase just completed
       if (isGroupPhaseComplete(newGroups) && !groupPhaseComplete) {
+        haptic.success();
         const activeCourts = tournament.settings.courts.filter((c) => c.active);
         const advancing = getAdvancingTeams(newGroups, teams);
         const newBracket = buildKOBracket(advancing, activeCourts);
@@ -708,7 +716,7 @@ export default function TournamentGroupsScreen() {
       <View style={styles.mainTabs}>
         <Pressable
           style={[styles.mainTab, activeTab === 'groups' && styles.mainTabActive]}
-          onPress={() => setActiveTab('groups')}
+          onPress={() => { haptic.selection(); setActiveTab('groups'); }}
         >
           <Text style={[styles.mainTabText, activeTab === 'groups' && styles.mainTabTextActive]}>
             Gruppen
@@ -716,7 +724,7 @@ export default function TournamentGroupsScreen() {
         </Pressable>
         <Pressable
           style={[styles.mainTab, activeTab === 'schedule' && styles.mainTabActive]}
-          onPress={() => setActiveTab('schedule')}
+          onPress={() => { haptic.selection(); setActiveTab('schedule'); }}
         >
           <Text style={[styles.mainTabText, activeTab === 'schedule' && styles.mainTabTextActive]}>
             Spielplan
@@ -724,7 +732,7 @@ export default function TournamentGroupsScreen() {
         </Pressable>
         <Pressable
           style={[styles.mainTab, activeTab === 'bracket' && styles.mainTabActive]}
-          onPress={() => setActiveTab('bracket')}
+          onPress={() => { haptic.selection(); setActiveTab('bracket'); }}
         >
           <Text style={[styles.mainTabText, activeTab === 'bracket' && styles.mainTabTextActive]}>
             KO-Baum
