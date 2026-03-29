@@ -2,10 +2,14 @@ import "dotenv/config";
 import express from "express";
 import { createServer } from "http";
 import net from "net";
+import path from "path";
+import { fileURLToPath } from "url";
 import { createExpressMiddleware } from "@trpc/server/adapters/express";
 import { registerOAuthRoutes } from "./oauth";
 import { appRouter } from "../routers";
 import { createContext } from "./context";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise((resolve) => {
@@ -58,6 +62,11 @@ async function startServer() {
 
   app.get("/api/health", (_req, res) => {
     res.json({ ok: true, timestamp: Date.now() });
+  });
+
+  // Public tournament viewer – no auth required, opens in any browser via QR code
+  app.get("/view", (_req, res) => {
+    res.sendFile(path.join(__dirname, "viewer.html"));
   });
 
   app.use(

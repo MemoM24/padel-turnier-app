@@ -25,4 +25,12 @@ export const users = mysqlTable("users", {
 export type User = typeof users.$inferSelect;
 export type InsertUser = typeof users.$inferInsert;
 
-// TODO: Add your tables here
+// Tournaments table for public QR viewer
+export const tournaments = mysqlTable("tournaments", {
+  id: varchar("id", { length: 64 }).primaryKey(), // same ID as local tournament
+  data: text("data").notNull(), // full Tournament JSON
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type TournamentRow = typeof tournaments.$inferSelect;
+export type InsertTournamentRow = typeof tournaments.$inferInsert;

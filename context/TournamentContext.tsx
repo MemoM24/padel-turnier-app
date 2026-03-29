@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useCallback, type ReactNode
 import type { Tournament, WizardState, TournamentType, TournamentSettings } from '@/types';
 import { Language, setLanguage as setI18nLanguage } from '@/i18n';
 import { saveActiveTournament } from '@/lib/storage';
+import { syncTournamentToServer } from '@/lib/serverSync';
 
 interface TournamentContextValue {
   // Active tournament
@@ -60,6 +61,8 @@ export function TournamentProvider({ children }: { children: ReactNode }) {
   const saveTournament = useCallback(async (t: Tournament) => {
     setTournamentState(t);
     await saveActiveTournament(t);
+    // Non-blocking: sync to backend so QR viewer stays up-to-date
+    syncTournamentToServer(t).catch(() => {});
   }, []);
 
   const setWizardType = useCallback((type: TournamentType) => {

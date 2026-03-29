@@ -1,6 +1,6 @@
 import { eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users } from "../drizzle/schema";
+import { InsertUser, users, tournaments, InsertTournamentRow } from "../drizzle/schema";
 import { ENV } from "./_core/env";
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -87,6 +87,23 @@ export async function getUserByOpenId(openId: string) {
   const result = await db.select().from(users).where(eq(users.openId, openId)).limit(1);
 
   return result.length > 0 ? result[0] : undefined;
+}
+
+// ── Tournament queries (for public QR viewer) ─────────────────────────────
+export async function upsertTournament(id: string, data: string): Promise<void> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db
+    .insert(tournaments)
+    .values({ id, data })
+    .onDuplicateKeyUpdate({ set: { data } });
+}
+
+export async function getTournamentById(id: string): Promise<string | null> {
+  const db = await getDb();
+  if (!db) return null;
+  const rows = await db.select().from(tournaments).where(eq(tournaments.id, id)).limit(1);
+  return rows.length > 0 ? rows[0].data : null;
 }
 
 // TODO: add feature queries here as your schema grows.

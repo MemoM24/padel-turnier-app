@@ -100,3 +100,10 @@
 - [x] Runden-Tabs klickbar: vergangene Runden als Read-only anzeigen
 - [x] Aktuelle Runde bleibt editierbar, vergangene nur lesbar
 - [x] Gespeicherte Scores in vergangenen Runden korrekt anzeigen
+
+## Live-Viewer (QR-Code ohne App)
+- [x] Backend: POST /api/tournament – Turnierdaten speichern/aktualisieren (tRPC tournament.upsert)
+- [x] Backend: GET /api/tournament/:id – Turnierdaten abrufen (tRPC tournament.get)
+- [x] Viewer-Webseite: Tabelle + alle Runden-Ergebnisse (Read-only, kein Login)
+- [x] App: Turnier beim Speichern automatisch auf Server hochladen (non-blocking sync)
+- [x] QR-Code zeigt Viewer-URL (öffentlich im Browser öffenbar)

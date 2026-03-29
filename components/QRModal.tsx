@@ -11,6 +11,7 @@ import {
 import * as Clipboard from 'expo-clipboard';
 import QRCode from 'react-native-qrcode-svg';
 import { t } from '@/i18n';
+import { getViewerUrl } from '@/lib/serverSync';
 
 interface QRModalProps {
   visible: boolean;
@@ -22,15 +23,14 @@ interface QRModalProps {
 export function QRModal({ visible, tournamentId, tournamentName, onClose }: QRModalProps) {
   const [copied, setCopied] = useState(false);
 
-  // Generate a shareable URL (deep link)
-  const joinUrl = `pdl1://join?id=${tournamentId}`;
-  const displayUrl = `PDL1 App → Turnier beitreten\nID: ${tournamentId}`;
+  // Public browser URL – no app needed, opens in any browser
+  const viewerUrl = getViewerUrl(tournamentId);
 
-  const handleCopy = async () => {
+  const handleCopyUrl = async () => {
     try {
-      await Clipboard.setStringAsync(tournamentId);
+      await Clipboard.setStringAsync(viewerUrl);
       setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+      setTimeout(() => setCopied(false), 2500);
     } catch {
       Alert.alert('', 'Kopieren nicht möglich');
     }
@@ -45,7 +45,7 @@ export function QRModal({ visible, tournamentId, tournamentName, onClose }: QRMo
 
           {/* Header */}
           <View style={styles.header}>
-            <Text style={styles.title}>{t('inviteQR')}</Text>
+            <Text style={styles.title}>📱 Live-Ansicht teilen</Text>
             <Pressable
               style={({ pressed }) => [styles.closeBtn, pressed && { opacity: 0.6 }]}
               onPress={onClose}
@@ -56,23 +56,30 @@ export function QRModal({ visible, tournamentId, tournamentName, onClose }: QRMo
 
           <Text style={styles.subtitle} numberOfLines={1}>{tournamentName}</Text>
 
+          {/* Info text */}
+          <View style={styles.infoBox}>
+            <Text style={styles.infoText}>
+              📷 QR-Code scannen – Tabelle &amp; Ergebnisse im Browser anzeigen, ohne App-Download.
+            </Text>
+          </View>
+
           {/* QR Code */}
           <View style={styles.qrContainer}>
             <QRCode
-              value={joinUrl}
+              value={viewerUrl || `pdl1://view?id=${tournamentId}`}
               size={200}
               color="#111111"
               backgroundColor="#ffffff"
             />
           </View>
 
-          {/* Tournament ID display */}
+          {/* URL display */}
           <Pressable
             style={({ pressed }) => [styles.urlBox, pressed && { opacity: 0.7 }]}
-            onPress={handleCopy}
+            onPress={handleCopyUrl}
           >
-            <Text style={styles.urlLabel}>Turnier-ID</Text>
-            <Text style={styles.urlText} numberOfLines={1}>{tournamentId}</Text>
+            <Text style={styles.urlLabel}>Live-URL</Text>
+            <Text style={styles.urlText} numberOfLines={2}>{viewerUrl || `pdl1://view?id=${tournamentId}`}</Text>
             <Text style={styles.urlHint}>Tippen zum Kopieren</Text>
           </Pressable>
 
@@ -83,10 +90,10 @@ export function QRModal({ visible, tournamentId, tournamentName, onClose }: QRMo
               copied && styles.copyBtnDone,
               pressed && { opacity: 0.85 },
             ]}
-            onPress={handleCopy}
+            onPress={handleCopyUrl}
           >
             <Text style={styles.copyBtnText}>
-              {copied ? `✓ ${t('copied')}` : `📋 ${t('copyURL')}`}
+              {copied ? '✓ URL kopiert!' : '📋 URL kopieren'}
             </Text>
           </Pressable>
         </Pressable>
@@ -98,13 +105,13 @@ export function QRModal({ visible, tournamentId, tournamentName, onClose }: QRMo
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    backgroundColor: 'rgba(0,0,0,0.55)',
     justifyContent: 'flex-end',
   },
   sheet: {
     backgroundColor: '#ffffff',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
     padding: 20,
     paddingBottom: 36,
     gap: 14,
@@ -148,6 +155,19 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
     marginTop: -8,
   },
+  infoBox: {
+    width: '100%',
+    backgroundColor: '#f0fdf4',
+    borderRadius: 10,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: '#bbf7d0',
+  },
+  infoText: {
+    fontSize: 13,
+    color: '#166534',
+    lineHeight: 19,
+  },
   qrContainer: {
     padding: 16,
     backgroundColor: '#ffffff',
@@ -177,10 +197,9 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
   urlText: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '600',
     color: '#111',
-    fontVariant: ['tabular-nums'],
   },
   urlHint: {
     fontSize: 11,
