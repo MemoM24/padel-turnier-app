@@ -14,7 +14,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTournament } from '@/context/TournamentContext';
 import { StepIndicator } from '@/components/StepIndicator';
 import { AppHeader } from '@/components/AppHeader';
-import { t, type TranslationKey } from '@/i18n';
+import { type TranslationKey } from '@/i18n';
+import { useT } from '@/hooks/use-t';
 import type { TournamentType } from '@/types';
 import { useOnboarding } from '@/context/OnboardingContext';
 import { TooltipOverlay } from '@/components/TooltipOverlay';
@@ -31,6 +32,7 @@ export default function TournamentTypeScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { wizard, setWizardType, setWizardName } = useTournament();
+  const t = useT();
   const { isScreenDone, markScreenDone } = useOnboarding();
   const [showTooltip, setShowTooltip] = useState(false);
 

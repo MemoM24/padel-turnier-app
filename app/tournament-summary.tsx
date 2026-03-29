@@ -13,7 +13,7 @@ import { useTournament } from '@/context/TournamentContext';
 import { StepIndicator } from '@/components/StepIndicator';
 import { AppHeader } from '@/components/AppHeader';
 import { Avatar } from '@/components/Avatar';
-import { t } from '@/i18n';
+import { useT } from '@/hooks/use-t';
 import {
   createTournament,
   calculateTotalMatches,
@@ -48,6 +48,7 @@ export default function TournamentSummaryScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { wizard, saveTournament } = useTournament();
+  const t = useT();
 
   const { type, settings, players } = wizard;
   const s = settings as TournamentSettings;

@@ -12,7 +12,7 @@ import {
 import { useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AppHeader } from '@/components/AppHeader';
-import { t } from '@/i18n';
+import { useT } from '@/hooks/use-t';
 import { submitJoinRequest, checkJoinStatus } from '@/lib/serverSync';
 
 export default function JoinScreen() {
@@ -20,6 +20,7 @@ export default function JoinScreen() {
   const params = useLocalSearchParams<{ tournamentId?: string }>();
   const tournamentId = params.tournamentId ?? '';
 
+  const t = useT();
   const [name, setName] = useState('');
   const [status, setStatus] = useState<'idle' | 'submitting' | 'waiting' | 'approved' | 'rejected' | 'error'>('idle');
   const [requestId, setRequestId] = useState<string | null>(null);

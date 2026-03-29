@@ -18,7 +18,7 @@ import { AppHeader } from '@/components/AppHeader';
 import { Avatar } from '@/components/Avatar';
 import { JoinQRModal } from '@/components/JoinQRModal';
 import { getSavedPlayers } from '@/lib/storage';
-import { t } from '@/i18n';
+import { useT } from '@/hooks/use-t';
 import { useOnboarding } from '@/context/OnboardingContext';
 import { TooltipOverlay } from '@/components/TooltipOverlay';
 
@@ -28,6 +28,7 @@ export default function TournamentPlayersScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { wizard, setWizardPlayers } = useTournament();
+  const t = useT();
   const [players, setPlayers] = useState<string[]>(wizard.players);
   const [inputValue, setInputValue] = useState('');
   const [savedPlayers, setSavedPlayers] = useState<string[]>([]);

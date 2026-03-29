@@ -12,7 +12,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTournament } from '@/context/TournamentContext';
 import { StepIndicator } from '@/components/StepIndicator';
 import { AppHeader } from '@/components/AppHeader';
-import { t } from '@/i18n';
+import { useT } from '@/hooks/use-t';
 import type { Court, GameMode } from '@/types';
 import Svg, { Rect, Line, Circle, Ellipse } from 'react-native-svg';
 
@@ -82,6 +82,7 @@ export default function TournamentSettingsScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { wizard, setWizardSettings } = useTournament();
+  const t = useT();
 
   const settings = wizard.settings;
   const [pointsPerRound, setPointsPerRound] = useState(settings.pointsPerRound ?? 24);

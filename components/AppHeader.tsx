@@ -3,7 +3,7 @@ import { View, Text, Pressable, StyleSheet, Image } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useTournament } from '@/context/TournamentContext';
-import { t } from '@/i18n';
+import { useT } from '@/hooks/use-t';
 import { FlagIcon } from '@/components/FlagIcon';
 
 interface AppHeaderProps {
@@ -32,6 +32,7 @@ export function AppHeader({
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { language, toggleLanguage } = useTournament();
+  const t = useT();
 
   const handleBack = () => {
     if (onBackPress) {

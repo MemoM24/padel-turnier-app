@@ -13,11 +13,11 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTournament } from '@/context/TournamentContext';
 import { getHistory, loadTournamentById } from '@/lib/storage';
 import { Avatar } from '@/components/Avatar';
-import { t } from '@/i18n';
 import type { TournamentHistoryItem } from '@/types';
 import { useOnboarding } from '@/context/OnboardingContext';
 import { TooltipOverlay } from '@/components/TooltipOverlay';
 import { FlagIcon } from '@/components/FlagIcon';
+import { useT } from '@/hooks/use-t';
 
 const TYPE_LABELS: Record<string, string> = {
   americano: '🔄 Americano',
@@ -31,6 +31,7 @@ export default function HomeScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { resetWizard, setTournament, language, toggleLanguage } = useTournament();
+  const t = useT();
   const { isScreenDone, markScreenDone } = useOnboarding();
   const [showTooltip, setShowTooltip] = useState(false);
 

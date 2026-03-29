@@ -10,7 +10,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import QRCode from 'react-native-qrcode-svg';
-import { t } from '@/i18n';
+import { useT } from '@/hooks/use-t';
 import { getJoinUrl, listPendingJoinRequests, decideJoinRequest } from '@/lib/serverSync';
 
 interface JoinQRModalProps {
@@ -34,6 +34,7 @@ export function JoinQRModal({
   onClose,
   onPlayerApproved,
 }: JoinQRModalProps) {
+  const t = useT();
   const [pending, setPending] = useState<PendingRequest[]>([]);
   const [loading, setLoading] = useState(false);
   const [deciding, setDeciding] = useState<string | null>(null);

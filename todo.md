@@ -141,3 +141,6 @@
 - [x] Match-Screen: Finalrunde-Button – Paarungen nach Tabelle (1.+3. vs 2.+4., 5.+7. vs 6.+8. usw.)
 - [x] QR-Code Live-Ansicht: viewer.html wird jetzt beim Build nach dist/ kopiert
 - [x] QR-Code Spieler-Join: /join Route hinzugefügt, leitet auf /view?join=1 weiter
+
+## Verbesserungen v6
+- [x] Sprachumschaltung: useT() Hook ersetzt statisches t() – alle Komponenten rendern bei Sprachwechsel neu

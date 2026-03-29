@@ -13,12 +13,13 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTournament } from '@/context/TournamentContext';
 import { AppHeader } from '@/components/AppHeader';
 import { getFirebaseConfig, saveFirebaseConfig } from '@/lib/storage';
-import { t } from '@/i18n';
+import { useT } from '@/hooks/use-t';
 
 export default function FirebaseConfigScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { setFirebaseConfig } = useTournament();
+  const t = useT();
   const [configText, setConfigText] = useState('');
 
   useEffect(() => {

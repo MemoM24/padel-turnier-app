@@ -21,7 +21,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTournament } from '@/context/TournamentContext';
 import { AppHeader } from '@/components/AppHeader';
 import { Avatar } from '@/components/Avatar';
-import { t } from '@/i18n';
+import { useT } from '@/hooks/use-t';
 import {
   generateNextRound,
   generateFinalRound,
@@ -59,6 +59,7 @@ function ScoreModal({
   const [selected, setSelected] = useState<number | null>(currentScore);
   const [showCustom, setShowCustom] = useState(false);
   const [customText, setCustomText] = useState('');
+  const t = useT();
 
   useEffect(() => {
     setSelected(currentScore);
@@ -226,6 +227,7 @@ function TimerOverlay({
   const [paused, setPaused] = useState(false);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const blinkAnim = useRef(new Animated.Value(1)).current;
+  const t = useT();
 
   useEffect(() => {
     if (visible) {
@@ -383,6 +385,7 @@ export default function TournamentMatchesScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { tournament, saveTournament } = useTournament();
+  const t = useT();
 
   const [activeTab, setActiveTab] = useState<'matches' | 'standings'>('matches');
   const [scores, setScores] = useState<Record<string, { s1: number | null; s2: number | null }>>({});

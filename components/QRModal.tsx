@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import * as Clipboard from 'expo-clipboard';
 import QRCode from 'react-native-qrcode-svg';
-import { t } from '@/i18n';
+import { useT } from '@/hooks/use-t';
 import { getViewerUrl } from '@/lib/serverSync';
 
 interface QRModalProps {
@@ -21,6 +21,7 @@ interface QRModalProps {
 }
 
 export function QRModal({ visible, tournamentId, tournamentName, onClose }: QRModalProps) {
+  const t = useT();
   const [copied, setCopied] = useState(false);
 
   // Public browser URL – no app needed, opens in any browser
