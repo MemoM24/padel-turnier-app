@@ -123,3 +123,4 @@
 - [ ] Turnier-Historie: Wischen nach links/rechts zum Löschen mit Bestätigungsdialog
 - [x] Sprachumschalter: Flaggen-Emoji statt DE/EN Text (🇩🇪 / 🇬🇧)
 - [x] Intro-Logo: Weiße Logo-Version (pdl1_logo_white.png) für schwarzen Intro-Hintergrund
+- [x] Home-Screen: Zahnrad/Firebase-Button entfernen, nur Sprachflagge im Header rechts

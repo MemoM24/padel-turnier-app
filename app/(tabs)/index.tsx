@@ -27,7 +27,7 @@ const TYPE_LABELS: Record<string, string> = {
 export default function HomeScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { resetWizard, setTournament, language } = useTournament();
+  const { resetWizard, setTournament, language, toggleLanguage } = useTournament();
   const [history, setHistory] = useState<TournamentHistoryItem[]>([]);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -121,10 +121,10 @@ export default function HomeScreen() {
           </View>
         </View>
         <Pressable
-          onPress={() => router.push('/firebase-config' as any)}
-          style={({ pressed }) => [styles.settingsBtn, pressed && { opacity: 0.6 }]}
+          onPress={toggleLanguage}
+          style={({ pressed }) => [styles.langBtn, pressed && { opacity: 0.7 }]}
         >
-          <Text style={styles.settingsText}>⚙️</Text>
+          <Text style={styles.langText}>{language === 'de' ? '🇩🇪' : '🇬🇧'}</Text>
         </Pressable>
       </View>
 
@@ -207,15 +207,15 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#6b7280',
   },
-  settingsBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+  langBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     backgroundColor: '#f4f5f3',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  settingsText: {
+  langText: {
     fontSize: 20,
   },
   listContent: {
