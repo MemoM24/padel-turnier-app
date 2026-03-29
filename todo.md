@@ -117,3 +117,9 @@
 - [x] Grüner Plus-Button oben rechts im Spielplan-Screen (Join-QR öffnen)
 - [x] Spieler-Join per QR: separater Join-QR-Code (nicht Viewer-QR), Browser-Formular
 - [x] Admin-Bestätigung: Pending-Liste für beitretende Spieler (Ja/Nein) mit Echtzeit-Polling
+
+## Verbesserungen v4
+- [ ] Join-QR-Button: nur im Spieler-Auswahl-Screen anzeigen, nicht im laufenden Match-Screen
+- [ ] Turnier-Historie: Wischen nach links/rechts zum Löschen mit Bestätigungsdialog
+- [x] Sprachumschalter: Flaggen-Emoji statt DE/EN Text (🇩🇪 / 🇬🇧)
+- [x] Intro-Logo: Weiße Logo-Version (pdl1_logo_white.png) für schwarzen Intro-Hintergrund

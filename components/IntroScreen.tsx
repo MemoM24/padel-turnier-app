@@ -89,7 +89,7 @@ export function IntroScreen({ onFinish }: IntroScreenProps) {
         ]}
       >
         <Image
-          source={require('@/assets/images/pdl1_logo_transparent.png')}
+          source={require('@/assets/images/pdl1_logo_white.png')}
           style={styles.logo}
           resizeMode="contain"
         />

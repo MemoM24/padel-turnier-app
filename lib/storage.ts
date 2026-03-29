@@ -36,6 +36,16 @@ export async function saveToHistory(tournament: Tournament): Promise<void> {
   } catch {}
 }
 
+export async function deleteFromHistory(id: string): Promise<void> {
+  try {
+    const history = await getHistory();
+    const updated = history.filter((h) => h.id !== id);
+    await AsyncStorage.setItem(KEYS.HISTORY, JSON.stringify(updated));
+    // Also remove the per-id tournament data
+    await AsyncStorage.removeItem(`padelT_${id}`);
+  } catch {}
+}
+
 export async function updateHistoryItem(id: string, updates: Partial<TournamentHistoryItem>): Promise<void> {
   try {
     const history = await getHistory();

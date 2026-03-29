@@ -106,7 +106,7 @@ export function AppHeader({
               onPress={toggleLanguage}
               style={({ pressed }) => [styles.langBtn, pressed && { opacity: 0.7 }]}
             >
-              <Text style={styles.langText}>{language === 'de' ? 'DE' : 'EN'}</Text>
+              <Text style={styles.langText}>{language === 'de' ? '🇩🇪' : '🇬🇧'}</Text>
             </Pressable>
           )}
         </View>
@@ -225,16 +225,14 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   langBtn: {
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 14,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     backgroundColor: '#f4f5f3',
-    borderWidth: 1,
-    borderColor: 'rgba(0,0,0,0.09)',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   langText: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#111',
+    fontSize: 20,
   },
 });

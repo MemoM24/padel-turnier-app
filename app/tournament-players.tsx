@@ -16,6 +16,7 @@ import { useTournament } from '@/context/TournamentContext';
 import { StepIndicator } from '@/components/StepIndicator';
 import { AppHeader } from '@/components/AppHeader';
 import { Avatar } from '@/components/Avatar';
+import { JoinQRModal } from '@/components/JoinQRModal';
 import { getSavedPlayers } from '@/lib/storage';
 import { t } from '@/i18n';
 
@@ -28,7 +29,12 @@ export default function TournamentPlayersScreen() {
   const [players, setPlayers] = useState<string[]>(wizard.players);
   const [inputValue, setInputValue] = useState('');
   const [savedPlayers, setSavedPlayers] = useState<string[]>([]);
+  const [joinQrVisible, setJoinQrVisible] = useState(false);
   const inputRef = useRef<TextInput>(null);
+
+  // Generate a temporary tournament ID for the join QR during wizard
+  const wizardTournamentId = useRef(`wizard_${Date.now()}`).current;
+  const wizardTournamentName = wizard.tournamentName || 'Neues Turnier';
 
   useEffect(() => {
     getSavedPlayers().then(setSavedPlayers);
@@ -73,6 +79,7 @@ export default function TournamentPlayersScreen() {
           subtitle={t('addPlayer')}
           showBack
           showLanguageToggle
+          onJoinPress={() => setJoinQrVisible(true)}
         />
         <StepIndicator currentStep={3} totalSteps={4} />
 
@@ -156,6 +163,18 @@ export default function TournamentPlayersScreen() {
             </Text>
           </Pressable>
         </View>
+        {/* Join QR Modal */}
+        <JoinQRModal
+          visible={joinQrVisible}
+          tournamentId={wizardTournamentId}
+          tournamentName={wizardTournamentName}
+          onClose={() => setJoinQrVisible(false)}
+          onPlayerApproved={(name) => {
+            if (!players.includes(name)) {
+              setPlayers((prev) => [...prev, name]);
+            }
+          }}
+        />
       </View>
     </KeyboardAvoidingView>
   );

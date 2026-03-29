@@ -14,7 +14,6 @@ import {
   Platform,
 } from 'react-native';
 import { QRModal } from '@/components/QRModal';
-import { JoinQRModal } from '@/components/JoinQRModal';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTournament } from '@/context/TournamentContext';
@@ -394,8 +393,7 @@ export default function TournamentMatchesScreen() {
   }>({ visible: false, matchId: '', team: 1, teamLabel: '', opponentLabel: '', currentScore: null });
   const [timerVisible, setTimerVisible] = useState(false);
   const [qrVisible, setQrVisible] = useState(false);
-  const [joinQrVisible, setJoinQrVisible] = useState(false);
-  const [pendingCount, setPendingCount] = useState(0);
+
 
   if (!tournament) {
     return (
@@ -625,8 +623,6 @@ export default function TournamentMatchesScreen() {
         showBack
         showLanguageToggle
         onQRPress={() => setQrVisible(true)}
-        onJoinPress={() => setJoinQrVisible(true)}
-        pendingCount={pendingCount}
       />
 
       {/* Round Tabs */}
@@ -702,28 +698,6 @@ export default function TournamentMatchesScreen() {
         onClose={() => setQrVisible(false)}
       />
 
-      {/* Join QR Modal */}
-      <JoinQRModal
-        visible={joinQrVisible}
-        tournamentId={tournament.id}
-        tournamentName={tournament.name}
-        onClose={() => setJoinQrVisible(false)}
-        onPlayerApproved={(name) => {
-          // Add player to tournament
-          const newPlayer = {
-            id: `player_${Date.now()}`,
-            name,
-            games: 0,
-            points: 0,
-          };
-          const updated = {
-            ...tournament,
-            players: [...tournament.players, newPlayer],
-          };
-          saveTournament(updated);
-          setPendingCount((c) => Math.max(0, c - 1));
-        }}
-      />
     </View>
   );
 }
