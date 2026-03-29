@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -9,6 +9,9 @@ import {
   Animated,
   Alert,
   ScrollView,
+  TextInput,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { QRModal } from '@/components/QRModal';
 import { useRouter } from 'expo-router';
@@ -25,108 +28,182 @@ import {
 } from '@/lib/tournament';
 import type { Match, Player } from '@/types';
 
-// ─── Score Modal ──────────────────────────────────────────────────────────────
+// ─── Score Modal (Padelmix-style) ─────────────────────────────────────────────
+/**
+ * Full number grid from 0 to pointsPerRound.
+ * When a score is selected, the opponent score is auto-calculated as:
+ *   opponentScore = pointsPerRound - selectedScore
+ * The caller receives BOTH scores so they can be applied simultaneously.
+ */
 function ScoreModal({
   visible,
-  matchId,
   teamLabel,
+  opponentLabel,
   currentScore,
+  pointsPerRound,
   onSelect,
   onClose,
 }: {
   visible: boolean;
-  matchId: string;
   teamLabel: string;
+  opponentLabel: string;
   currentScore: number | null;
-  onSelect: (score: number) => void;
+  pointsPerRound: number;
+  onSelect: (teamScore: number, opponentScore: number) => void;
   onClose: () => void;
 }) {
   const [selected, setSelected] = useState<number | null>(currentScore);
-  const [customInput, setCustomInput] = useState('');
+  const [showCustom, setShowCustom] = useState(false);
+  const [customText, setCustomText] = useState('');
 
   useEffect(() => {
     setSelected(currentScore);
+    setShowCustom(false);
+    setCustomText('');
   }, [currentScore, visible]);
 
-  const numbers = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+  // Build grid: 0 to pointsPerRound
+  const numbers = Array.from({ length: pointsPerRound + 1 }, (_, i) => i);
 
-  const handleConfirm = () => {
-    if (selected !== null) {
-      onSelect(selected);
+  const handleSelect = (n: number) => {
+    setSelected(n);
+    const opp = Math.max(0, pointsPerRound - n);
+    onSelect(n, opp);
+    onClose();
+  };
+
+  const handleCustomConfirm = () => {
+    const val = parseInt(customText, 10);
+    if (!isNaN(val) && val >= 0) {
+      const opp = Math.max(0, pointsPerRound - val);
+      onSelect(val, opp);
       onClose();
     }
   };
 
+  const opponentPreview = selected !== null ? Math.max(0, pointsPerRound - selected) : null;
+
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
-      <Pressable style={styles.modalOverlay} onPress={onClose}>
-        <Pressable style={styles.modalSheet} onPress={(e) => e.stopPropagation()}>
-          <View style={styles.modalHandle} />
-          <Text style={styles.modalTitle}>{t('enterScore')}</Text>
-          <Text style={styles.modalSubtitle}>{teamLabel}</Text>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={styles.modalOverlay}
+      >
+        <Pressable style={styles.modalOverlay} onPress={onClose}>
+          <Pressable style={styles.modalSheet} onPress={(e) => e.stopPropagation()}>
+            <View style={styles.modalHandle} />
 
-          <View style={styles.scoreGrid}>
-            {numbers.map((n) => (
+            {/* Title */}
+            <Text style={styles.modalTitle}>
+              {t('enterScore')}
+            </Text>
+
+            {/* Team labels with auto-opponent preview */}
+            <View style={styles.modalTeamRow}>
+              <View style={styles.modalTeamBlock}>
+                <Text style={styles.modalTeamName} numberOfLines={2}>{teamLabel}</Text>
+                <View style={[styles.modalScorePreview, selected !== null && styles.modalScorePreviewActive]}>
+                  <Text style={[styles.modalScorePreviewText, selected !== null && styles.modalScorePreviewTextActive]}>
+                    {selected !== null ? String(selected).padStart(2, '0') : '—'}
+                  </Text>
+                </View>
+              </View>
+
+              <Text style={styles.modalVs}>:</Text>
+
+              <View style={styles.modalTeamBlock}>
+                <Text style={[styles.modalTeamName, { textAlign: 'right' }]} numberOfLines={2}>{opponentLabel}</Text>
+                <View style={[styles.modalScorePreview, opponentPreview !== null && styles.modalScorePreviewOpp]}>
+                  <Text style={[styles.modalScorePreviewText, opponentPreview !== null && styles.modalScorePreviewTextOpp]}>
+                    {opponentPreview !== null ? String(opponentPreview).padStart(2, '0') : '—'}
+                  </Text>
+                </View>
+              </View>
+            </View>
+
+            <Text style={styles.modalHint}>
+              Tippe auf eine Zahl – Gegenpunkte werden automatisch berechnet
+            </Text>
+
+            {!showCustom ? (
+              <>
+                {/* Number grid */}
+                <ScrollView style={styles.gridScroll} showsVerticalScrollIndicator={false}>
+                  <View style={styles.scoreGrid}>
+                    {numbers.map((n) => (
+                      <Pressable
+                        key={n}
+                        style={({ pressed }) => [
+                          styles.scoreCell,
+                          selected === n && styles.scoreCellSelected,
+                          pressed && { opacity: 0.7 },
+                        ]}
+                        onPress={() => handleSelect(n)}
+                      >
+                        <Text style={[styles.scoreCellText, selected === n && styles.scoreCellTextSelected]}>
+                          {String(n).padStart(2, '0')}
+                        </Text>
+                      </Pressable>
+                    ))}
+                  </View>
+                </ScrollView>
+
+                {/* Custom input link */}
+                <Pressable
+                  style={({ pressed }) => [styles.customLink, pressed && { opacity: 0.6 }]}
+                  onPress={() => setShowCustom(true)}
+                >
+                  <Text style={styles.customLinkText}>Benutzerdefinierte Punktzahl eingeben</Text>
+                </Pressable>
+              </>
+            ) : (
+              /* Custom input mode */
+              <View style={styles.customInputArea}>
+                <Text style={styles.customInputLabel}>Eigene Punktzahl für {teamLabel}:</Text>
+                <TextInput
+                  style={styles.customInput}
+                  value={customText}
+                  onChangeText={setCustomText}
+                  keyboardType="number-pad"
+                  placeholder="z.B. 18"
+                  autoFocus
+                  returnKeyType="done"
+                  onSubmitEditing={handleCustomConfirm}
+                />
+                <View style={styles.customActions}>
+                  <Pressable
+                    style={({ pressed }) => [styles.cancelBtn, pressed && { opacity: 0.7 }]}
+                    onPress={() => setShowCustom(false)}
+                  >
+                    <Text style={styles.cancelBtnText}>{t('back')}</Text>
+                  </Pressable>
+                  <Pressable
+                    style={({ pressed }) => [
+                      styles.confirmBtn,
+                      !customText && styles.confirmBtnDisabled,
+                      pressed && customText && { opacity: 0.85 },
+                    ]}
+                    onPress={handleCustomConfirm}
+                    disabled={!customText}
+                  >
+                    <Text style={styles.confirmBtnText}>{t('confirm')}</Text>
+                  </Pressable>
+                </View>
+              </View>
+            )}
+
+            {/* Cancel button */}
+            {!showCustom && (
               <Pressable
-                key={n}
-                style={({ pressed }) => [
-                  styles.scoreCell,
-                  selected === n && styles.scoreCellSelected,
-                  pressed && { opacity: 0.7 },
-                ]}
-                onPress={() => setSelected(n)}
+                style={({ pressed }) => [styles.resetBtn, pressed && { opacity: 0.7 }]}
+                onPress={onClose}
               >
-                <Text style={[styles.scoreCellText, selected === n && styles.scoreCellTextSelected]}>
-                  {n}
-                </Text>
+                <Text style={styles.resetBtnText}>{t('cancel')}</Text>
               </Pressable>
-            ))}
-            {/* 10+ button spanning 2 columns */}
-            <Pressable
-              style={({ pressed }) => [
-                styles.scoreCell,
-                styles.scoreCellWide,
-                selected !== null && selected >= 10 && styles.scoreCellSelected,
-                pressed && { opacity: 0.7 },
-              ]}
-              onPress={() => {
-                // Cycle through 10–32
-                const next = selected !== null && selected >= 10 ? Math.min(selected + 1, 32) : 10;
-                setSelected(next);
-              }}
-            >
-              <Text
-                style={[
-                  styles.scoreCellText,
-                  selected !== null && selected >= 10 && styles.scoreCellTextSelected,
-                ]}
-              >
-                {selected !== null && selected >= 10 ? selected : '10+'}
-              </Text>
-            </Pressable>
-          </View>
-
-          <View style={styles.modalActions}>
-            <Pressable
-              style={({ pressed }) => [styles.cancelBtn, pressed && { opacity: 0.7 }]}
-              onPress={onClose}
-            >
-              <Text style={styles.cancelBtnText}>{t('cancel')}</Text>
-            </Pressable>
-            <Pressable
-              style={({ pressed }) => [
-                styles.confirmBtn,
-                selected === null && styles.confirmBtnDisabled,
-                pressed && selected !== null && { opacity: 0.85 },
-              ]}
-              onPress={handleConfirm}
-              disabled={selected === null}
-            >
-              <Text style={styles.confirmBtnText}>{t('confirm')}</Text>
-            </Pressable>
-          </View>
+            )}
+          </Pressable>
         </Pressable>
-      </Pressable>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }
@@ -173,7 +250,6 @@ function TimerOverlay({
     };
   }, [visible, paused]);
 
-  // Blink animation for danger state
   useEffect(() => {
     if (remaining <= 60 && remaining > 0) {
       const anim = Animated.loop(
@@ -204,18 +280,13 @@ function TimerOverlay({
         <Pressable style={styles.timerClose} onPress={onClose}>
           <Text style={styles.timerCloseText}>✕</Text>
         </Pressable>
-
         <Text style={styles.timerLabel}>{t('timerRunning')}</Text>
-
         <Animated.Text style={[styles.timerDisplay, isDanger && { opacity: blinkAnim }]}>
           {timeStr}
         </Animated.Text>
-
-        {/* Progress bar */}
         <View style={styles.progressBar}>
-          <View style={[styles.progressFill, { width: `${progress * 100}%` }]} />
+          <View style={[styles.progressFill, { width: `${progress * 100}%` as any }]} />
         </View>
-
         <View style={styles.timerActions}>
           <Pressable
             style={({ pressed }) => [styles.timerBtn, pressed && { opacity: 0.7 }]}
@@ -235,7 +306,7 @@ function TimerOverlay({
   );
 }
 
-// ─── Match Card ───────────────────────────────────────────────────────────────
+// ─── Match Card (Padelmix-style) ──────────────────────────────────────────────
 function MatchCard({
   match,
   scores,
@@ -250,54 +321,52 @@ function MatchCard({
 
   return (
     <View style={[styles.matchCard, hasScore && styles.matchCardDone]}>
-      <Text style={styles.matchCourt}>{match.courtName}</Text>
+      {/* Score buttons centered at top */}
+      <View style={styles.matchScoreRow}>
+        <Pressable
+          style={({ pressed }) => [
+            styles.scoreBtn,
+            s.s1 !== null && styles.scoreBtnFilled,
+            pressed && { opacity: 0.7 },
+          ]}
+          onPress={() => onScorePress(match.id, 1)}
+        >
+          <Text style={[styles.scoreBtnText, s.s1 !== null && styles.scoreBtnTextFilled]}>
+            {s.s1 !== null ? String(s.s1).padStart(2, '0') : '00'}
+          </Text>
+        </Pressable>
+        <Pressable
+          style={({ pressed }) => [
+            styles.scoreBtn,
+            s.s2 !== null && styles.scoreBtnFilled,
+            pressed && { opacity: 0.7 },
+          ]}
+          onPress={() => onScorePress(match.id, 2)}
+        >
+          <Text style={[styles.scoreBtnText, s.s2 !== null && styles.scoreBtnTextFilled]}>
+            {s.s2 !== null ? String(s.s2).padStart(2, '0') : '00'}
+          </Text>
+        </Pressable>
+      </View>
+
+      {/* Teams left and right */}
       <View style={styles.matchTeams}>
-        {/* Team 1 */}
+        {/* Team 1 – left */}
         <View style={styles.matchTeam}>
           {match.team1.map((name, i) => (
-            <View key={i} style={styles.matchPlayer}>
-              <Avatar name={name} size="sm" />
-              <Text style={styles.matchPlayerName} numberOfLines={1}>{name}</Text>
-            </View>
+            <Text key={i} style={styles.matchPlayerName} numberOfLines={1}>{name}</Text>
           ))}
         </View>
 
-        {/* Scores */}
-        <View style={styles.matchScores}>
-          <Pressable
-            style={({ pressed }) => [
-              styles.scoreBtn,
-              s.s1 !== null && styles.scoreBtnFilled,
-              pressed && { opacity: 0.7 },
-            ]}
-            onPress={() => onScorePress(match.id, 1)}
-          >
-            <Text style={[styles.scoreBtnText, s.s1 !== null && styles.scoreBtnTextFilled]}>
-              {s.s1 !== null ? s.s1 : '—'}
-            </Text>
-          </Pressable>
-          <Text style={styles.scoreSep}>:</Text>
-          <Pressable
-            style={({ pressed }) => [
-              styles.scoreBtn,
-              s.s2 !== null && styles.scoreBtnFilled,
-              pressed && { opacity: 0.7 },
-            ]}
-            onPress={() => onScorePress(match.id, 2)}
-          >
-            <Text style={[styles.scoreBtnText, s.s2 !== null && styles.scoreBtnTextFilled]}>
-              {s.s2 !== null ? s.s2 : '—'}
-            </Text>
-          </Pressable>
+        {/* Court label center */}
+        <View style={styles.matchCourtBadge}>
+          <Text style={styles.matchCourtText}>⬛ {match.courtName}</Text>
         </View>
 
-        {/* Team 2 */}
+        {/* Team 2 – right */}
         <View style={[styles.matchTeam, styles.matchTeamRight]}>
           {match.team2.map((name, i) => (
-            <View key={i} style={[styles.matchPlayer, styles.matchPlayerRight]}>
-              <Text style={styles.matchPlayerName} numberOfLines={1}>{name}</Text>
-              <Avatar name={name} size="sm" />
-            </View>
+            <Text key={i} style={[styles.matchPlayerName, styles.matchPlayerNameRight]} numberOfLines={1}>{name}</Text>
           ))}
         </View>
       </View>
@@ -318,8 +387,9 @@ export default function TournamentMatchesScreen() {
     matchId: string;
     team: 1 | 2;
     teamLabel: string;
+    opponentLabel: string;
     currentScore: number | null;
-  }>({ visible: false, matchId: '', team: 1, teamLabel: '', currentScore: null });
+  }>({ visible: false, matchId: '', team: 1, teamLabel: '', opponentLabel: '', currentScore: null });
   const [timerVisible, setTimerVisible] = useState(false);
   const [qrVisible, setQrVisible] = useState(false);
 
@@ -334,6 +404,7 @@ export default function TournamentMatchesScreen() {
     );
   }
 
+  const pointsPerRound = tournament.settings.pointsPerRound ?? 24;
   const currentRoundIndex = tournament.currentRound - 1;
   const currentRound = tournament.rounds[currentRoundIndex];
   const totalRounds =
@@ -353,24 +424,28 @@ export default function TournamentMatchesScreen() {
     const match = currentRound?.matches.find((m) => m.id === matchId);
     if (!match) return;
     const teamNames = team === 1 ? match.team1 : match.team2;
+    const oppNames = team === 1 ? match.team2 : match.team1;
     const s = scores[matchId];
     setScoreModal({
       visible: true,
       matchId,
       team,
       teamLabel: teamNames.join(' & '),
+      opponentLabel: oppNames.join(' & '),
       currentScore: team === 1 ? (s?.s1 ?? null) : (s?.s2 ?? null),
     });
   };
 
-  const handleScoreSelect = (score: number) => {
+  // When a score is selected, automatically set both team and opponent scores
+  const handleScoreSelect = (teamScore: number, opponentScore: number) => {
     const { matchId, team } = scoreModal;
     setScores((prev) => {
       const existing = prev[matchId] ?? { s1: null, s2: null };
-      return {
-        ...prev,
-        [matchId]: team === 1 ? { ...existing, s1: score } : { ...existing, s2: score },
-      };
+      if (team === 1) {
+        return { ...prev, [matchId]: { s1: teamScore, s2: opponentScore } };
+      } else {
+        return { ...prev, [matchId]: { s1: opponentScore, s2: teamScore } };
+      }
     });
   };
 
@@ -388,14 +463,12 @@ export default function TournamentMatchesScreen() {
     let updated = applyRoundScores(tournament, currentRoundIndex, scoreList);
 
     if (isLastRound) {
-      // End tournament
       updated = { ...updated, finished: true };
       await saveTournament(updated);
       Alert.alert(t('tournamentFinished'), '', [
         { text: t('backToHome'), onPress: () => router.replace('/') },
       ]);
     } else {
-      // Generate next round
       const nextRound = generateNextRound(updated);
       if (nextRound) {
         updated = {
@@ -412,11 +485,35 @@ export default function TournamentMatchesScreen() {
   const standings = getStandings(tournament.players);
   const timerSeconds = (tournament.settings.gameTimeMinutes ?? 10) * 60;
 
-  // Standings Tab
+  // ── Round Tabs (horizontal scroll) ──────────────────────────────────────────
+  const renderRoundTabs = () => (
+    <ScrollView
+      horizontal
+      showsHorizontalScrollIndicator={false}
+      style={styles.roundTabsScroll}
+      contentContainerStyle={styles.roundTabsContent}
+    >
+      {Array.from({ length: tournament.rounds.length }, (_, i) => i + 1).map((r) => (
+        <View
+          key={r}
+          style={[
+            styles.roundTab,
+            r === tournament.currentRound && styles.roundTabActive,
+          ]}
+        >
+          <Text style={[styles.roundTabText, r === tournament.currentRound && styles.roundTabTextActive]}>
+            {r}
+          </Text>
+        </View>
+      ))}
+      <Text style={styles.roundTabLabel}>Runden</Text>
+    </ScrollView>
+  );
+
+  // ── Standings Tab ────────────────────────────────────────────────────────────
   const renderStandingsTab = () => (
     <ScrollView contentContainerStyle={styles.standingsContent}>
       <View style={styles.standingsCard}>
-        {/* Header */}
         <View style={styles.standingsHeader}>
           <Text style={[styles.standingsCell, styles.standingsCellRank]}>{t('rank')}</Text>
           <Text style={[styles.standingsCell, { flex: 1 }]}>{t('player')}</Text>
@@ -426,7 +523,6 @@ export default function TournamentMatchesScreen() {
         </View>
         {standings.map((player, idx) => {
           const medal = idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : null;
-          const isTop3 = idx < 3;
           return (
             <View
               key={player.id}
@@ -440,7 +536,7 @@ export default function TournamentMatchesScreen() {
               <Text style={[styles.standingsCell, styles.standingsCellRank]}>
                 {medal ?? `${idx + 1}`}
               </Text>
-              <View style={[{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 0 }]}>
+              <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                 <Avatar name={player.name} size="sm" />
                 <Text style={styles.standingsPlayerName} numberOfLines={1}>{player.name}</Text>
               </View>
@@ -456,7 +552,7 @@ export default function TournamentMatchesScreen() {
     </ScrollView>
   );
 
-  // Matches Tab
+  // ── Matches Tab ──────────────────────────────────────────────────────────────
   const renderMatchesTab = () => (
     <FlatList
       data={currentRound?.matches ?? []}
@@ -464,14 +560,6 @@ export default function TournamentMatchesScreen() {
       contentContainerStyle={[styles.matchesContent, { paddingBottom: insets.bottom + 120 }]}
       ListHeaderComponent={
         <View style={styles.roundHeader}>
-          <Text style={styles.roundTitle}>
-            {t('round')} {tournament.currentRound}
-          </Text>
-          <View style={styles.roundBadge}>
-            <Text style={styles.roundBadgeText}>
-              {tournament.currentRound}/{totalRounds}
-            </Text>
-          </View>
           {tournament.settings.gameMode === 'time' && (
             <Pressable
               style={({ pressed }) => [styles.timerStartBtn, pressed && { opacity: 0.7 }]}
@@ -486,15 +574,14 @@ export default function TournamentMatchesScreen() {
         <MatchCard match={item} scores={scores} onScorePress={openScoreModal} />
       )}
       ListFooterComponent={
-        currentRound?.byePlayers.length ? (
+        currentRound?.byePlayers?.length ? (
           <View style={styles.byeBox}>
-            <Text style={styles.byeTitle}>{t('bye')}</Text>
-            {currentRound.byePlayers.map((name, i) => (
-              <View key={i} style={styles.byePlayer}>
-                <Avatar name={name} size="sm" />
-                <Text style={styles.byePlayerName}>{name}</Text>
-              </View>
-            ))}
+            <Text style={styles.byeTitle}>⬛ Pausierende Spieler</Text>
+            <View style={styles.byePlayersList}>
+              {currentRound.byePlayers.map((name, i) => (
+                <Text key={i} style={styles.byePlayerName}>{name}</Text>
+              ))}
+            </View>
           </View>
         ) : null
       }
@@ -505,13 +592,16 @@ export default function TournamentMatchesScreen() {
     <View style={[styles.container, { paddingBottom: 0 }]}>
       <AppHeader
         title={tournament.name}
-        subtitle={`${t('round')} ${tournament.currentRound}/${totalRounds}`}
+        subtitle={`${tournament.settings.pointsPerRound ?? 24} ⊙  ${tournament.players.length} 👤`}
         showBack
         showLanguageToggle
         onQRPress={() => setQrVisible(true)}
       />
 
-      {/* Tab Bar */}
+      {/* Round Tabs */}
+      {renderRoundTabs()}
+
+      {/* Tab Bar: Matches / Standings */}
       <View style={styles.tabBar}>
         <Pressable
           style={[styles.tab, activeTab === 'matches' && styles.tabActive]}
@@ -558,9 +648,10 @@ export default function TournamentMatchesScreen() {
       {/* Score Modal */}
       <ScoreModal
         visible={scoreModal.visible}
-        matchId={scoreModal.matchId}
         teamLabel={scoreModal.teamLabel}
+        opponentLabel={scoreModal.opponentLabel}
         currentScore={scoreModal.currentScore}
+        pointsPerRound={pointsPerRound}
         onSelect={handleScoreSelect}
         onClose={() => setScoreModal((prev) => ({ ...prev, visible: false }))}
       />
@@ -588,7 +679,41 @@ const styles = StyleSheet.create({
   emptyCenter: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   emptyText: { fontSize: 16, color: '#6b7280' },
 
-  // Tabs
+  // Round Tabs
+  roundTabsScroll: {
+    backgroundColor: '#111',
+    maxHeight: 64,
+  },
+  roundTabsContent: {
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    gap: 8,
+    alignItems: 'center',
+    flexDirection: 'row',
+  },
+  roundTab: {
+    width: 44,
+    height: 44,
+    borderRadius: 8,
+    backgroundColor: '#2a2a2a',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#444',
+  },
+  roundTabActive: {
+    backgroundColor: '#1a6bff',
+    borderColor: '#1a6bff',
+  },
+  roundTabText: { fontSize: 16, fontWeight: '700', color: '#888' },
+  roundTabTextActive: { color: '#ffffff' },
+  roundTabLabel: {
+    fontSize: 13,
+    color: '#666',
+    marginLeft: 4,
+  },
+
+  // Tab Bar
   tabBar: {
     flexDirection: 'row',
     backgroundColor: '#ffffff',
@@ -611,19 +736,11 @@ const styles = StyleSheet.create({
   roundHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    justifyContent: 'flex-end',
     marginBottom: 4,
+    minHeight: 0,
   },
-  roundTitle: { fontSize: 17, fontWeight: '700', color: '#111' },
-  roundBadge: {
-    backgroundColor: '#e0f5ec',
-    paddingHorizontal: 10,
-    paddingVertical: 3,
-    borderRadius: 12,
-  },
-  roundBadgeText: { fontSize: 12, fontWeight: '600', color: '#0d6b4a' },
   timerStartBtn: {
-    marginLeft: 'auto',
     backgroundColor: '#0d6b4a',
     paddingHorizontal: 12,
     paddingVertical: 6,
@@ -631,69 +748,68 @@ const styles = StyleSheet.create({
   },
   timerStartBtnText: { color: '#fff', fontSize: 13, fontWeight: '600' },
 
-  // Match Card
+  // Match Card (Padelmix-style)
   matchCard: {
-    backgroundColor: '#ffffff',
+    backgroundColor: '#1e1e1e',
     borderRadius: 14,
-    padding: 12,
+    padding: 14,
     borderWidth: 1,
-    borderColor: 'rgba(0,0,0,0.09)',
-    gap: 8,
+    borderColor: '#333',
+    gap: 10,
   },
   matchCardDone: {
     borderColor: '#1a9e6f',
-    backgroundColor: '#f0fdf8',
+    backgroundColor: '#0d2b1f',
   },
-  matchCourt: {
-    fontSize: 11,
-    fontWeight: '600',
-    color: '#6b7280',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  matchTeams: {
+  matchScoreRow: {
     flexDirection: 'row',
-    alignItems: 'center',
+    justifyContent: 'center',
     gap: 8,
   },
-  matchTeam: { flex: 1, gap: 4 },
-  matchTeamRight: { alignItems: 'flex-end' },
-  matchPlayer: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  matchPlayerRight: { flexDirection: 'row-reverse' },
-  matchPlayerName: { fontSize: 13, color: '#111', fontWeight: '500', flex: 1 },
-  matchScores: {
+  scoreBtn: {
+    width: 64,
+    height: 56,
+    borderRadius: 10,
+    backgroundColor: '#2a2a2a',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#444',
+  },
+  scoreBtnFilled: { backgroundColor: '#1a3d2b', borderColor: '#1a9e6f' },
+  scoreBtnText: { fontSize: 22, fontWeight: '700', color: '#888', fontVariant: ['tabular-nums'] },
+  scoreBtnTextFilled: { color: '#4ade80' },
+  matchTeams: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
   },
-  scoreBtn: {
-    width: 40,
-    height: 40,
+  matchTeam: { flex: 1, gap: 2 },
+  matchTeamRight: { alignItems: 'flex-end' },
+  matchPlayerName: { fontSize: 14, color: '#e5e7eb', fontWeight: '500' },
+  matchPlayerNameRight: { textAlign: 'right' },
+  matchCourtBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
     borderRadius: 8,
-    backgroundColor: '#f4f5f3',
+    backgroundColor: '#2a2a2a',
     alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: 'rgba(0,0,0,0.09)',
   },
-  scoreBtnFilled: { backgroundColor: '#e0f5ec', borderColor: '#1a9e6f' },
-  scoreBtnText: { fontSize: 16, fontWeight: '700', color: '#6b7280' },
-  scoreBtnTextFilled: { color: '#0d6b4a' },
-  scoreSep: { fontSize: 16, fontWeight: '700', color: '#6b7280' },
+  matchCourtText: { fontSize: 11, color: '#888', fontWeight: '600' },
 
   // Bye Box
   byeBox: {
-    backgroundColor: '#fffbeb',
+    backgroundColor: '#1e1e1e',
     borderRadius: 12,
-    padding: 12,
+    padding: 14,
     borderWidth: 1,
-    borderColor: '#f59e0b',
+    borderColor: '#444',
     gap: 8,
     marginTop: 8,
   },
-  byeTitle: { fontSize: 13, fontWeight: '700', color: '#d97706' },
-  byePlayer: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  byePlayerName: { fontSize: 14, color: '#111' },
+  byeTitle: { fontSize: 14, fontWeight: '700', color: '#9ca3af' },
+  byePlayersList: { gap: 4 },
+  byePlayerName: { fontSize: 14, color: '#e5e7eb' },
 
   // Standings
   standingsContent: { padding: 12, paddingBottom: 100 },
@@ -724,11 +840,7 @@ const styles = StyleSheet.create({
   standingsRowGold: { backgroundColor: '#fffbeb' },
   standingsRowSilver: { backgroundColor: '#f9fafb' },
   standingsRowBronze: { backgroundColor: '#fff7ed' },
-  standingsCell: {
-    fontSize: 13,
-    color: '#111',
-    fontWeight: '500',
-  },
+  standingsCell: { fontSize: 13, color: '#111', fontWeight: '500' },
   standingsCellRank: { width: 36, textAlign: 'center' },
   standingsCellNum: { width: 40, textAlign: 'center' },
   standingsPlayerName: { fontSize: 13, color: '#111', fontWeight: '500', flex: 1 },
@@ -753,56 +865,105 @@ const styles = StyleSheet.create({
   // Score Modal
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    backgroundColor: 'rgba(0,0,0,0.6)',
     justifyContent: 'flex-end',
   },
   modalSheet: {
-    backgroundColor: '#ffffff',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
+    backgroundColor: '#1a1a1a',
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
     padding: 20,
     paddingBottom: 32,
-    gap: 16,
+    maxHeight: '85%',
   },
   modalHandle: {
     width: 40,
     height: 4,
     borderRadius: 2,
-    backgroundColor: '#E5E7EB',
+    backgroundColor: '#444',
     alignSelf: 'center',
-    marginBottom: 4,
+    marginBottom: 12,
   },
-  modalTitle: { fontSize: 18, fontWeight: '700', color: '#111', textAlign: 'center' },
-  modalSubtitle: { fontSize: 14, color: '#6b7280', textAlign: 'center', marginTop: -8 },
+  modalTitle: { fontSize: 18, fontWeight: '700', color: '#fff', textAlign: 'center' },
+  modalTeamRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: 4,
+    gap: 8,
+  },
+  modalTeamBlock: { flex: 1, alignItems: 'center', gap: 6 },
+  modalTeamName: { fontSize: 13, color: '#9ca3af', textAlign: 'center', fontWeight: '500' },
+  modalVs: { fontSize: 22, fontWeight: '700', color: '#fff', marginHorizontal: 4 },
+  modalScorePreview: {
+    width: 64,
+    height: 52,
+    borderRadius: 10,
+    backgroundColor: '#2a2a2a',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#444',
+  },
+  modalScorePreviewActive: { backgroundColor: '#1a3d2b', borderColor: '#1a9e6f' },
+  modalScorePreviewOpp: { backgroundColor: '#2a1a1a', borderColor: '#ef4444' },
+  modalScorePreviewText: { fontSize: 22, fontWeight: '700', color: '#888', fontVariant: ['tabular-nums'] },
+  modalScorePreviewTextActive: { color: '#4ade80' },
+  modalScorePreviewTextOpp: { color: '#f87171' },
+  modalHint: { fontSize: 12, color: '#6b7280', textAlign: 'center', marginTop: -4 },
+  gridScroll: { maxHeight: 280 },
   scoreGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 8,
     justifyContent: 'center',
+    paddingVertical: 8,
   },
   scoreCell: {
     width: 52,
     height: 52,
     borderRadius: 10,
-    backgroundColor: '#f4f5f3',
+    backgroundColor: '#2a2a2a',
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: 'rgba(0,0,0,0.09)',
+    borderColor: '#444',
   },
-  scoreCellWide: { width: 112 },
-  scoreCellSelected: { backgroundColor: '#e0f5ec', borderColor: '#1a9e6f' },
-  scoreCellText: { fontSize: 18, fontWeight: '700', color: '#111' },
-  scoreCellTextSelected: { color: '#0d6b4a' },
-  modalActions: { flexDirection: 'row', gap: 10 },
+  scoreCellSelected: { backgroundColor: '#1a3d2b', borderColor: '#1a9e6f' },
+  scoreCellText: { fontSize: 17, fontWeight: '700', color: '#e5e7eb', fontVariant: ['tabular-nums'] },
+  scoreCellTextSelected: { color: '#4ade80' },
+  customLink: { alignItems: 'center', paddingVertical: 8 },
+  customLinkText: { fontSize: 14, color: '#1a6bff', fontWeight: '500' },
+  resetBtn: {
+    paddingVertical: 14,
+    borderRadius: 12,
+    backgroundColor: '#1a6bff',
+    alignItems: 'center',
+    marginTop: 4,
+  },
+  resetBtnText: { fontSize: 15, fontWeight: '700', color: '#ffffff' },
+  customInputArea: { gap: 12 },
+  customInputLabel: { fontSize: 14, color: '#9ca3af' },
+  customInput: {
+    backgroundColor: '#2a2a2a',
+    borderRadius: 10,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    fontSize: 18,
+    color: '#fff',
+    borderWidth: 1,
+    borderColor: '#444',
+    fontVariant: ['tabular-nums'],
+  },
+  customActions: { flexDirection: 'row', gap: 10 },
   cancelBtn: {
     flex: 1,
     paddingVertical: 14,
     borderRadius: 10,
-    backgroundColor: '#f4f5f3',
+    backgroundColor: '#2a2a2a',
     alignItems: 'center',
   },
-  cancelBtnText: { fontSize: 15, fontWeight: '600', color: '#6b7280' },
+  cancelBtnText: { fontSize: 15, fontWeight: '600', color: '#9ca3af' },
   confirmBtn: {
     flex: 2,
     paddingVertical: 14,
@@ -810,7 +971,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#1a9e6f',
     alignItems: 'center',
   },
-  confirmBtnDisabled: { backgroundColor: '#E5E7EB' },
+  confirmBtnDisabled: { backgroundColor: '#333' },
   confirmBtnText: { fontSize: 15, fontWeight: '700', color: '#ffffff' },
 
   // Timer

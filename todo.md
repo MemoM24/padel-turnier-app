@@ -86,3 +86,12 @@
 - [x] AppHeader: paddingTop korrekt auf insets.top setzen (kein fester Wert)
 - [x] HomeScreen-Header: paddingTop korrekt auf insets.top setzen
 - [x] Alle Screens mit eigenem Header prüfen und Safe Area sicherstellen
+
+## Padelmix-Verbesserungen
+- [x] Score-Modal: Zahlen-Grid 00 bis max (z.B. 24) passend zur Turniereinstellung
+- [x] Score-Modal: Automatische Gegenpunkt-Berechnung (Auswahl 15 → Gegner = max-15)
+- [x] Score-Modal: "Benutzerdefinierte Punktzahl eingeben" Option
+- [x] Spielplan-Screen: Runden-Tabs horizontal scrollbar (1, 2, 3...)
+- [x] Spielplan-Screen: Spieler links/rechts, Score-Buttons in der Mitte (Padelmix-Layout)
+- [x] Spielplan-Screen: "Pausierende Spieler" Sektion unten
+- [x] Zusammenfassung: Detaillierte Turnierbeschreibung (Spielmodus, Regeln, Runden, Matches, Dauer)

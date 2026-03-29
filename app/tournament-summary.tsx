@@ -5,6 +5,7 @@ import {
   ScrollView,
   Pressable,
   StyleSheet,
+  Image,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -23,11 +24,24 @@ import { addSavedPlayers } from '@/lib/storage';
 import type { TournamentSettings } from '@/types';
 
 const TYPE_LABELS: Record<string, string> = {
-  americano: '🔄 Americano',
-  americano_mixed: '👫 Mixed Americano',
-  mexicano: '⚡ Mexicano',
-  king_of_court: '👑 King of Court',
-  groups_ko: '🏆 Gruppen/KO',
+  americano: 'Klassisches Americano',
+  americano_mixed: 'Gemischtes Americano',
+  mexicano: 'Klassisches Mexicano',
+  king_of_court: 'King of the Court',
+  groups_ko: 'Gruppen / KO',
+};
+
+const TYPE_DESCRIPTIONS: Record<string, (players: number, courts: number, pointsPerRound: number, rounds: number, totalMatches: number, durationMin: number) => string> = {
+  americano: (p, c, pts, r, tm, dur) =>
+    `• Sie spielen die Klassisches Americano-Variante.\n• ${p} Spieler spielen auf ${c} Platz${c > 1 ? '/Plätzen' : ''}.\n• Die Spieler werden in einzigartigen Teams gepaart, bis jeder mit jedem und gegen jeden gespielt hat.\n• Jede Runde wird bis zu ${pts} Punkten gespielt. Jeder gewonnene Ball gibt dem Gewinnerpaar einen Punkt. Nach ${pts} gespielten Bällen geben Sie die Ergebnisse ein.\n• Zu spielende Runden: ${r}\n• Gesamtanzahl der Matches: ${tm}\n• Geschätzte Dauer: ${Math.floor(dur / 60)}h ${dur % 60}m`,
+  americano_mixed: (p, c, pts, r, tm, dur) =>
+    `• Sie spielen die Gemischtes Americano-Variante.\n• ${p} Spieler spielen auf ${c} Platz${c > 1 ? '/Plätzen' : ''}.\n• Teams werden gemischtgeschlechtlich zusammengestellt.\n• Jede Runde wird bis zu ${pts} Punkten gespielt.\n• Zu spielende Runden: ${r}\n• Gesamtanzahl der Matches: ${tm}\n• Geschätzte Dauer: ${Math.floor(dur / 60)}h ${dur % 60}m`,
+  mexicano: (p, c, pts, r, tm, dur) =>
+    `• Sie spielen die Klassisches Mexicano-Variante.\n• ${p} Spieler spielen auf ${c} Platz${c > 1 ? '/Plätzen' : ''}.\n• Die Paarungen basieren auf dem aktuellen Punktestand – Führende spielen gegen Führende.\n• Jede Runde wird bis zu ${pts} Punkten gespielt.\n• Zu spielende Runden: ${r}\n• Gesamtanzahl der Matches: ${tm}\n• Geschätzte Dauer: ${Math.floor(dur / 60)}h ${dur % 60}m`,
+  king_of_court: (p, c, pts, r, tm, dur) =>
+    `• Sie spielen King of the Court.\n• ${p} Spieler spielen auf ${c} Platz${c > 1 ? '/Plätzen' : ''}.\n• Der Sieger bleibt auf dem Platz, der Verlierer rückt nach hinten.\n• Jede Runde wird bis zu ${pts} Punkten gespielt.\n• Zu spielende Runden: ${r}\n• Gesamtanzahl der Matches: ${tm}\n• Geschätzte Dauer: ${Math.floor(dur / 60)}h ${dur % 60}m`,
+  groups_ko: (p, c, pts, r, tm, dur) =>
+    `• Sie spielen Gruppen / KO.\n• ${p} Spieler spielen auf ${c} Platz${c > 1 ? '/Plätzen' : ''}.\n• Gruppenphase gefolgt von K.O.-Runden.\n• Jede Runde wird bis zu ${pts} Punkten gespielt.\n• Zu spielende Runden: ${r}\n• Gesamtanzahl der Matches: ${tm}\n• Geschätzte Dauer: ${Math.floor(dur / 60)}h ${dur % 60}m`,
 };
 
 export default function TournamentSummaryScreen() {
@@ -40,13 +54,25 @@ export default function TournamentSummaryScreen() {
   const activeCourts = (s.courts ?? []).filter((c) => c.active);
   const rounds = s.numRounds === 0 ? getAutoRounds(players.length) : (s.numRounds ?? 0);
   const totalMatches = calculateTotalMatches(players.length, rounds, activeCourts.length);
-  const duration = estimateDuration(totalMatches, s.gameMode ?? 'points', s.gameTimeMinutes ?? 10);
+  const durationMinutes = estimateDuration(totalMatches, s.gameMode ?? 'points', s.gameTimeMinutes ?? 10);
+  const pointsPerRound = s.pointsPerRound ?? 24;
+
+  // Build Padelmix-style description
+  const descFn = TYPE_DESCRIPTIONS[type ?? 'americano'] ?? TYPE_DESCRIPTIONS.americano;
+  const description = descFn(
+    players.length,
+    activeCourts.length,
+    pointsPerRound,
+    rounds,
+    totalMatches,
+    durationMinutes,
+  );
 
   const handleCreate = async () => {
     if (!type) return;
     const fullSettings: TournamentSettings = {
       type,
-      pointsPerRound: s.pointsPerRound ?? 24,
+      pointsPerRound,
       numRounds: s.numRounds ?? 0,
       byePoints: s.byePoints ?? 0,
       gameMode: s.gameMode ?? 'points',
@@ -59,19 +85,6 @@ export default function TournamentSummaryScreen() {
     router.replace('/tournament-matches' as any);
   };
 
-  const rows = [
-    { label: t('format'), value: TYPE_LABELS[type ?? ''] ?? type ?? '-' },
-    { label: t('numPlayers'), value: `${players.length} ${t('players')}` },
-    { label: t('courts'), value: activeCourts.map((c) => c.name).join(', ') },
-    { label: t('pointsPerRound'), value: String(s.pointsPerRound ?? 24) },
-    { label: t('numRounds'), value: rounds === 0 ? t('auto') : String(rounds) },
-    { label: t('totalMatches'), value: String(totalMatches) },
-    {
-      label: t('estimatedDuration'),
-      value: `~${duration} ${t('minutes')}`,
-    },
-  ];
-
   return (
     <View style={[styles.container, { paddingBottom: insets.bottom }]}>
       <AppHeader
@@ -83,14 +96,21 @@ export default function TournamentSummaryScreen() {
       <StepIndicator currentStep={4} totalSteps={4} />
 
       <ScrollView contentContainerStyle={styles.content}>
-        {/* Summary Card */}
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>{t('summary')}</Text>
-          {rows.map(({ label, value }) => (
-            <View key={label} style={styles.row}>
-              <Text style={styles.rowLabel}>{label}</Text>
-              <Text style={styles.rowValue}>{value}</Text>
-            </View>
+        {/* Hero: Logo + Tournament Name */}
+        <View style={styles.hero}>
+          <Image
+            source={require('@/assets/images/icon.png')}
+            style={styles.heroLogo}
+            resizeMode="contain"
+          />
+          <Text style={styles.heroName}>{wizard.tournamentName || 'Mein Turnier'}</Text>
+          <Text style={styles.heroType}>{TYPE_LABELS[type ?? ''] ?? type}</Text>
+        </View>
+
+        {/* Padelmix-style description card */}
+        <View style={styles.descCard}>
+          {description.split('\n').map((line, i) => (
+            <Text key={i} style={styles.descLine}>{line}</Text>
           ))}
         </View>
 
@@ -126,30 +146,58 @@ export default function TournamentSummaryScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f4f5f3' },
-  content: { padding: 16, gap: 12, paddingBottom: 20 },
+  content: { padding: 16, gap: 14, paddingBottom: 20 },
+
+  // Hero section
+  hero: {
+    alignItems: 'center',
+    gap: 8,
+    paddingVertical: 16,
+  },
+  heroLogo: {
+    width: 72,
+    height: 72,
+    borderRadius: 16,
+  },
+  heroName: {
+    fontSize: 26,
+    fontWeight: '800',
+    color: '#111',
+    textAlign: 'center',
+  },
+  heroType: {
+    fontSize: 14,
+    color: '#6b7280',
+    fontWeight: '500',
+  },
+
+  // Description card (Padelmix-style)
+  descCard: {
+    backgroundColor: '#1e1e1e',
+    borderRadius: 16,
+    padding: 18,
+    gap: 6,
+  },
+  descLine: {
+    fontSize: 14,
+    color: '#e5e7eb',
+    lineHeight: 22,
+  },
+
+  // Players card
   card: {
     backgroundColor: '#ffffff',
     borderRadius: 14,
     padding: 16,
     borderWidth: 1,
     borderColor: 'rgba(0,0,0,0.09)',
-    gap: 10,
+    gap: 12,
   },
   cardTitle: { fontSize: 16, fontWeight: '700', color: '#111' },
-  row: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 4,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(0,0,0,0.05)',
-  },
-  rowLabel: { fontSize: 14, color: '#6b7280' },
-  rowValue: { fontSize: 14, fontWeight: '600', color: '#111' },
   playersGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 8,
+    gap: 10,
   },
   playerItem: {
     alignItems: 'center',
@@ -161,6 +209,8 @@ const styles = StyleSheet.create({
     color: '#6b7280',
     textAlign: 'center',
   },
+
+  // Footer
   footer: {
     padding: 16,
     backgroundColor: '#ffffff',
