@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, ScrollView, StyleSheet, Pressable } from 'react-native';
-import type { KOBracket, KOMatch, Team } from '@/types';
+import type { KOBracket, KOMatch, Team, SetScore } from '@/types';
 
 interface KOBracketViewProps {
   bracket: KOBracket;
@@ -8,7 +8,27 @@ interface KOBracketViewProps {
   groupPhaseComplete: boolean;
 }
 
-function TeamLabel({ team, score, isWinner }: { team: Team | null; score: number | null; isWinner?: boolean }) {
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+/** Format set array as "6:4  3:6  10:8" (only filled sets) */
+function formatSets(sets: SetScore[]): string {
+  return sets
+    .filter((s) => s.s1 !== null && s.s2 !== null)
+    .map((s) => `${s.s1}:${s.s2}`)
+    .join('  ');
+}
+
+// ─── Team Label ───────────────────────────────────────────────────────────────
+
+function TeamLabel({
+  team,
+  score,
+  isWinner,
+}: {
+  team: Team | null;
+  score: number | null;
+  isWinner?: boolean;
+}) {
   const isTBD = !team;
   return (
     <View style={[styles.teamLabel, isWinner && styles.teamLabelWinner]}>
@@ -27,11 +47,16 @@ function TeamLabel({ team, score, isWinner }: { team: Team | null; score: number
   );
 }
 
+// ─── Match Card ───────────────────────────────────────────────────────────────
+
 function MatchCard({ match, onPress }: { match: KOMatch; onPress?: () => void }) {
-  const canPlay = match.team1 && match.team2 && match.score1 === null;
+  const isPlayable = match.team1 !== null && match.team2 !== null;
   const isPlayed = match.score1 !== null && match.score2 !== null;
+  const canPlay = isPlayable && !isPlayed;
   const winner1 = isPlayed && match.score1! > match.score2!;
   const winner2 = isPlayed && match.score2! > match.score1!;
+
+  const setDisplay = match.sets ? formatSets(match.sets) : null;
 
   return (
     <Pressable
@@ -39,19 +64,31 @@ function MatchCard({ match, onPress }: { match: KOMatch; onPress?: () => void })
         styles.matchCard,
         isPlayed && styles.matchCardPlayed,
         canPlay && styles.matchCardCanPlay,
-        pressed && canPlay && { opacity: 0.8 },
+        pressed && isPlayable && { opacity: 0.8 },
       ]}
-      onPress={canPlay ? onPress : undefined}
+      onPress={isPlayable ? onPress : undefined}
     >
       <TeamLabel team={match.team1} score={match.score1} isWinner={winner1} />
       <View style={styles.matchDivider} />
       <TeamLabel team={match.team2} score={match.score2} isWinner={winner2} />
-      {match.courtName && (
+
+      {/* Set detail row */}
+      {isPlayed && setDisplay ? (
+        <View style={styles.setDetailRow}>
+          <Text style={styles.setDetailText}>{setDisplay}</Text>
+          {/* Edit indicator */}
+          <Text style={styles.editIcon}>✏️</Text>
+        </View>
+      ) : null}
+
+      {match.courtName && !setDisplay && (
         <Text style={styles.courtLabel}>{match.courtName}</Text>
       )}
     </Pressable>
   );
 }
+
+// ─── Main Component ───────────────────────────────────────────────────────────
 
 export function KOBracketView({ bracket, onMatchPress, groupPhaseComplete }: KOBracketViewProps) {
   if (!groupPhaseComplete) {
@@ -69,7 +106,11 @@ export function KOBracketView({ bracket, onMatchPress, groupPhaseComplete }: KOB
   const { rounds, matches } = bracket;
 
   return (
-    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.bracketContainer}>
+    <ScrollView
+      horizontal
+      showsHorizontalScrollIndicator={false}
+      contentContainerStyle={styles.bracketContainer}
+    >
       {rounds.map((roundName, roundIdx) => {
         const roundMatches = matches.filter((m) => m.roundIndex === roundIdx);
         return (
@@ -91,6 +132,8 @@ export function KOBracketView({ bracket, onMatchPress, groupPhaseComplete }: KOB
   );
 }
 
+// ─── Styles ───────────────────────────────────────────────────────────────────
+
 const styles = StyleSheet.create({
   bracketContainer: {
     flexDirection: 'row',
@@ -99,7 +142,7 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
   },
   roundColumn: {
-    width: 160,
+    width: 168,
     gap: 8,
   },
   roundTitle: {
@@ -114,6 +157,8 @@ const styles = StyleSheet.create({
   matchesColumn: {
     gap: 12,
   },
+
+  // Match card
   matchCard: {
     backgroundColor: '#ffffff',
     borderRadius: 10,
@@ -123,12 +168,13 @@ const styles = StyleSheet.create({
   },
   matchCardPlayed: {
     borderColor: 'rgba(0,0,0,0.08)',
-    opacity: 0.9,
   },
   matchCardCanPlay: {
     borderColor: '#1a9e6f',
     borderWidth: 1.5,
   },
+
+  // Team label
   teamLabel: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -179,6 +225,28 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.07)',
     marginHorizontal: 10,
   },
+
+  // Set detail
+  setDetailRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(0,0,0,0.05)',
+    backgroundColor: '#fafafa',
+  },
+  setDetailText: {
+    fontSize: 10,
+    color: '#6b7280',
+    fontWeight: '500',
+    letterSpacing: 0.3,
+  },
+  editIcon: {
+    fontSize: 10,
+  },
+
   courtLabel: {
     fontSize: 10,
     color: '#9BA1A6',
@@ -188,6 +256,7 @@ const styles = StyleSheet.create({
     borderTopColor: 'rgba(0,0,0,0.05)',
   },
 
+  // Pending state
   pendingContainer: {
     flex: 1,
     alignItems: 'center',

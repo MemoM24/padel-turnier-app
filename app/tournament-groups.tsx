@@ -474,9 +474,9 @@ function GroupMatchRow({
       style={({ pressed }) => [
         styles.matchRow,
         isPlayed && styles.matchRowPlayed,
-        pressed && !isPlayed && { opacity: 0.75 },
+        pressed && { opacity: 0.75 },
       ]}
-      onPress={isPlayed ? undefined : onPress}
+      onPress={onPress}
     >
       {/* Team 1 */}
       <View style={styles.matchTeamBlock}>
@@ -539,6 +539,13 @@ function GroupMatchRow({
           </Text>
         )}
       </View>
+
+      {/* Edit indicator for played matches */}
+      {isPlayed && (
+        <View style={styles.editIndicator}>
+          <Text style={styles.editIndicatorText}>✏️</Text>
+        </View>
+      )}
     </Pressable>
   );
 }
@@ -638,6 +645,7 @@ export default function TournamentGroupsScreen() {
   };
 
   const openKOMatchScore = (match: KOMatch) => {
+    // Allow editing even if already played (re-entry)
     if (!match.team1 || !match.team2) return;
     setScoreModal({
       visible: true,
@@ -979,5 +987,13 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#9BA1A6',
     fontWeight: '500',
+  },
+  editIndicator: {
+    position: 'absolute',
+    top: 6,
+    right: 8,
+  },
+  editIndicatorText: {
+    fontSize: 11,
   },
 });

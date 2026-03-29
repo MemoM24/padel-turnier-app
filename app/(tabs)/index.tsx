@@ -7,11 +7,14 @@ import {
   StyleSheet,
   RefreshControl,
   Image,
+  Animated,
+  Alert,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { GestureHandlerRootView, Swipeable } from 'react-native-gesture-handler';
 import { useTournament } from '@/context/TournamentContext';
-import { getHistory, loadTournamentById } from '@/lib/storage';
+import { getHistory, loadTournamentById, deleteFromHistory } from '@/lib/storage';
 import { Avatar } from '@/components/Avatar';
 import type { TournamentHistoryItem } from '@/types';
 import { useOnboarding } from '@/context/OnboardingContext';
@@ -27,6 +30,106 @@ const TYPE_LABELS: Record<string, string> = {
   groups_ko: '🏆 Gruppen/KO',
 };
 
+// ─── Swipeable History Card ───────────────────────────────────────────────────
+
+function SwipeableHistoryCard({
+  item,
+  onPress,
+  onDelete,
+}: {
+  item: TournamentHistoryItem;
+  onPress: () => void;
+  onDelete: () => void;
+}) {
+  const swipeRef = useRef<Swipeable>(null);
+
+  const date = new Date(item.createdAt).toLocaleDateString('de-DE', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+  });
+
+  const handleDelete = () => {
+    swipeRef.current?.close();
+    Alert.alert(
+      'Turnier löschen',
+      `"${item.name}" wirklich löschen?`,
+      [
+        { text: 'Abbrechen', style: 'cancel' },
+        {
+          text: 'Löschen',
+          style: 'destructive',
+          onPress: onDelete,
+        },
+      ],
+    );
+  };
+
+  const renderRightActions = (
+    _progress: Animated.AnimatedInterpolation<number>,
+    dragX: Animated.AnimatedInterpolation<number>,
+  ) => {
+    const scale = dragX.interpolate({
+      inputRange: [-80, 0],
+      outputRange: [1, 0.7],
+      extrapolate: 'clamp',
+    });
+
+    return (
+      <Pressable style={styles.deleteAction} onPress={handleDelete}>
+        <Animated.Text style={[styles.deleteIcon, { transform: [{ scale }] }]}>🗑️</Animated.Text>
+        <Animated.Text style={[styles.deleteLabel, { transform: [{ scale }] }]}>Löschen</Animated.Text>
+      </Pressable>
+    );
+  };
+
+  return (
+    <Swipeable
+      ref={swipeRef}
+      renderRightActions={renderRightActions}
+      rightThreshold={40}
+      overshootRight={false}
+    >
+      <Pressable
+        style={({ pressed }) => [styles.card, pressed && { opacity: 0.8 }]}
+        onPress={onPress}
+      >
+        <View style={styles.cardHeader}>
+          <View style={styles.cardTitleRow}>
+            <Text style={styles.cardName} numberOfLines={1}>
+              {item.name}
+            </Text>
+            <View style={[styles.badge, item.finished ? styles.badgeFinished : styles.badgeLive]}>
+              <Text style={[styles.badgeText, item.finished ? styles.badgeTextFinished : styles.badgeTextLive]}>
+                {item.finished ? '✓ Fertig' : '🟢 Live'}
+              </Text>
+            </View>
+          </View>
+          <Text style={styles.cardMeta}>
+            {TYPE_LABELS[item.type] ?? item.type} · {item.playerCount} Spieler · {date}
+          </Text>
+        </View>
+        <View style={styles.avatarRow}>
+          {item.playerNames.slice(0, 6).map((name, idx) => (
+            <View key={idx} style={{ marginRight: 4 }}>
+              <Avatar name={name} size="sm" />
+            </View>
+          ))}
+          {item.playerNames.length > 6 && (
+            <Text style={styles.moreText}>+{item.playerNames.length - 6}</Text>
+          )}
+        </View>
+        {/* Swipe hint on first card */}
+        <View style={styles.swipeHint}>
+          <Text style={styles.swipeHintText}>← wischen zum Löschen</Text>
+        </View>
+      </Pressable>
+    </Swipeable>
+  );
+}
+
+// ─── Main Screen ──────────────────────────────────────────────────────────────
+
 export default function HomeScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
@@ -35,13 +138,13 @@ export default function HomeScreen() {
   const { isScreenDone, markScreenDone } = useOnboarding();
   const [showTooltip, setShowTooltip] = useState(false);
 
-  // Show tooltip on first visit
   useEffect(() => {
     if (!isScreenDone('home')) {
       const timer = setTimeout(() => setShowTooltip(true), 800);
       return () => clearTimeout(timer);
     }
   }, []);
+
   const [history, setHistory] = useState<TournamentHistoryItem[]>([]);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -73,53 +176,16 @@ export default function HomeScreen() {
     }
   };
 
-  const renderHistoryItem = ({ item }: { item: TournamentHistoryItem }) => {
-    const date = new Date(item.createdAt).toLocaleDateString('de-DE', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-    });
-
-    return (
-      <Pressable
-        style={({ pressed }) => [styles.card, pressed && { opacity: 0.8 }]}
-        onPress={() => handleHistoryPress(item)}
-      >
-        <View style={styles.cardHeader}>
-          <View style={styles.cardTitleRow}>
-            <Text style={styles.cardName} numberOfLines={1}>
-              {item.name}
-            </Text>
-            <View style={[styles.badge, item.finished ? styles.badgeFinished : styles.badgeLive]}>
-              <Text style={[styles.badgeText, item.finished ? styles.badgeTextFinished : styles.badgeTextLive]}>
-                {item.finished ? t('finished') : '🟢 ' + t('live')}
-              </Text>
-            </View>
-          </View>
-          <Text style={styles.cardMeta}>
-            {TYPE_LABELS[item.type] ?? item.type} · {item.playerCount} {t('players')} · {date}
-          </Text>
-        </View>
-        <View style={styles.avatarRow}>
-          {item.playerNames.slice(0, 6).map((name, idx) => (
-            <View key={idx} style={{ marginRight: 4 }}>
-              <Avatar name={name} size="sm" />
-            </View>
-          ))}
-          {item.playerNames.length > 6 && (
-            <Text style={styles.moreText}>+{item.playerNames.length - 6}</Text>
-          )}
-        </View>
-      </Pressable>
-    );
+  const handleDelete = async (id: string) => {
+    await deleteFromHistory(id);
+    setHistory((prev) => prev.filter((h) => h.id !== id));
   };
 
-  // Ensure header sits below status bar / notch / Dynamic Island
   const headerTop = Math.max(insets.top, 44);
 
   return (
-    <View style={styles.container}>
-      {/* Header – extends behind status bar with correct top padding */}
+    <GestureHandlerRootView style={styles.container}>
+      {/* Header */}
       <View style={[styles.header, { paddingTop: headerTop + 10 }]}>
         <View style={styles.headerLeft}>
           <View style={styles.logoBox}>
@@ -145,7 +211,13 @@ export default function HomeScreen() {
       <FlatList
         data={history}
         keyExtractor={(item) => item.id}
-        renderItem={renderHistoryItem}
+        renderItem={({ item, index }) => (
+          <SwipeableHistoryCard
+            item={item}
+            onPress={() => handleHistoryPress(item)}
+            onDelete={() => handleDelete(item.id)}
+          />
+        )}
         contentContainerStyle={[
           styles.listContent,
           { paddingBottom: insets.bottom + 100 },
@@ -193,9 +265,9 @@ export default function HomeScreen() {
             body: 'Hier erscheinen alle deine Turniere. Tippe auf ein Turnier um es fortzusetzen oder die Ergebnisse anzusehen.',
           },
           {
-            icon: '🇩🇪',
-            title: 'Sprache wechseln',
-            body: 'Mit der Flagge oben rechts kannst du jederzeit zwischen Deutsch und Englisch wechseln.',
+            icon: '🗑️',
+            title: 'Turnier löschen',
+            body: 'Wische eine Karte nach links um das Turnier aus der Historie zu löschen.',
           },
         ]}
         onDone={() => {
@@ -203,7 +275,7 @@ export default function HomeScreen() {
           markScreenDone('home');
         }}
       />
-    </View>
+    </GestureHandlerRootView>
   );
 }
 
@@ -258,25 +330,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  langBadge: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  langBadgeDe: {
-    backgroundColor: '#000000',
-  },
-  langBadgeEn: {
-    backgroundColor: '#012169',
-  },
-  langText: {
-    fontSize: 12,
-    fontWeight: '800',
-    color: '#ffffff',
-    letterSpacing: 0.5,
-  },
   listContent: {
     padding: 16,
     gap: 12,
@@ -306,6 +359,8 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#111',
   },
+
+  // Card
   card: {
     backgroundColor: '#ffffff',
     borderRadius: 14,
@@ -363,6 +418,34 @@ const styles = StyleSheet.create({
     color: '#6b7280',
     marginLeft: 4,
   },
+  swipeHint: {
+    alignItems: 'flex-end',
+  },
+  swipeHintText: {
+    fontSize: 10,
+    color: '#d1d5db',
+    fontStyle: 'italic',
+  },
+
+  // Delete action
+  deleteAction: {
+    backgroundColor: '#ef4444',
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: 80,
+    borderRadius: 14,
+    marginLeft: 8,
+    gap: 4,
+  },
+  deleteIcon: {
+    fontSize: 20,
+  },
+  deleteLabel: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#ffffff',
+  },
+
   emptyContainer: {
     alignItems: 'center',
     paddingTop: 40,

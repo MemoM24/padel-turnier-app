@@ -172,3 +172,10 @@
 - [ ] Satz-Ergebnis-Eingabe: Playtomic-Stil (Satz 1, Satz 2, Satz 3 mit automatischer Gewinnererkennung)
 - [ ] Punktevergabe: +3 bei Sieg, +1 bei Unentschieden (2 Sätze gespielt, 3. nicht beendet, Punktgleichheit)
 - [ ] Paarungsalgorithmus: Max. 2 aufeinanderfolgende Spiele pro Team
+
+## Verbesserungen v10 – Swipe/Edit/KO-Sets
+- [x] Swipe-to-Delete für Turnierhistorie (Swipeable mit rotem Löschen-Button + Bestätigungsdialog)
+- [x] Nachträgliche Bearbeitung von Gruppenspiel-Ergebnissen (✏️-Icon, Modal mit vorausgefüllten Werten)
+- [x] KO-Phase: Playtomic-Satzeingabe (gleiches Modal wie Gruppenphase)
+- [x] KO-Baum: Satzergebnisse als Detail-Zeile unter den Teams anzeigen (z.B. "6:4  3:6  10:8")
+- [x] KO-Baum: Gespielte Matches ebenfalls bearbeitbar (✏️-Icon sichtbar)
