@@ -144,3 +144,4 @@
 
 ## Verbesserungen v6
 - [x] Sprachumschaltung: useT() Hook ersetzt statisches t() – alle Komponenten rendern bei Sprachwechsel neu
+- [x] Bug: Alert.prompt crash beim Hinzufügen von Courts – durch inline TextInput mit ✓/✕ Buttons ersetzt

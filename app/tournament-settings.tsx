@@ -6,6 +6,7 @@ import {
   Pressable,
   StyleSheet,
   Alert,
+  TextInput,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -100,6 +101,8 @@ export default function TournamentSettingsScreen() {
   );
 
   const activeCourtsCount = courts.filter((c) => c.active).length;
+  const [addingCourt, setAddingCourt] = useState(false);
+  const [newCourtName, setNewCourtName] = useState('');
 
   const toggleCourt = (id: string) => {
     const court = courts.find((c) => c.id === id);
@@ -112,20 +115,19 @@ export default function TournamentSettingsScreen() {
   };
 
   const addCourt = () => {
-    Alert.prompt(
-      t('courtName'),
-      t('enterCourtName'),
-      (name) => {
-        if (name && name.trim()) {
-          setCourts((prev) => [
-            ...prev,
-            { id: 'court_' + Date.now(), name: name.trim(), active: true },
-          ]);
-        }
-      },
-      'plain-text',
-      '',
-    );
+    setNewCourtName('');
+    setAddingCourt(true);
+  };
+
+  const confirmAddCourt = () => {
+    if (newCourtName.trim()) {
+      setCourts((prev) => [
+        ...prev,
+        { id: 'court_' + Date.now(), name: newCourtName.trim(), active: true },
+      ]);
+    }
+    setAddingCourt(false);
+    setNewCourtName('');
   };
 
   const handleNext = () => {
@@ -234,13 +236,34 @@ export default function TournamentSettingsScreen() {
                 )}
               </Pressable>
             ))}
-            <Pressable
-              style={({ pressed }) => [styles.courtAddBtn, pressed && { opacity: 0.7 }]}
-              onPress={addCourt}
-            >
-              <Text style={styles.courtAddIcon}>＋</Text>
-              <Text style={styles.courtAddBtnText}>{t('addCourt')}</Text>
-            </Pressable>
+            {addingCourt ? (
+              <View style={styles.courtInputRow}>
+                <TextInput
+                  style={styles.courtInput}
+                  value={newCourtName}
+                  onChangeText={setNewCourtName}
+                  placeholder={t('enterCourtName')}
+                  placeholderTextColor="#aaa"
+                  autoFocus
+                  returnKeyType="done"
+                  onSubmitEditing={confirmAddCourt}
+                />
+                <Pressable style={styles.courtInputConfirm} onPress={confirmAddCourt}>
+                  <Text style={styles.courtInputConfirmText}>✓</Text>
+                </Pressable>
+                <Pressable style={styles.courtInputCancel} onPress={() => setAddingCourt(false)}>
+                  <Text style={styles.courtInputCancelText}>✕</Text>
+                </Pressable>
+              </View>
+            ) : (
+              <Pressable
+                style={({ pressed }) => [styles.courtAddBtn, pressed && { opacity: 0.7 }]}
+                onPress={addCourt}
+              >
+                <Text style={styles.courtAddIcon}>＋</Text>
+                <Text style={styles.courtAddBtnText}>{t('addCourt')}</Text>
+              </Pressable>
+            )}
           </View>
         </View>
       </ScrollView>
@@ -352,6 +375,43 @@ const styles = StyleSheet.create({
   },
   courtAddIcon: { fontSize: 20, color: '#1a9e6f' },
   courtAddBtnText: { fontSize: 12, fontWeight: '600', color: '#1a9e6f' },
+  courtInputRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 4,
+    paddingVertical: 6,
+    width: '100%',
+  },
+  courtInput: {
+    flex: 1,
+    borderWidth: 1,
+    borderColor: '#1a9e6f',
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    fontSize: 14,
+    color: '#11181C',
+    backgroundColor: '#f9fafb',
+  },
+  courtInputConfirm: {
+    width: 36,
+    height: 36,
+    borderRadius: 8,
+    backgroundColor: '#1a9e6f',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  courtInputConfirmText: { color: '#fff', fontSize: 18, fontWeight: '700' },
+  courtInputCancel: {
+    width: 36,
+    height: 36,
+    borderRadius: 8,
+    backgroundColor: '#e5e7eb',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  courtInputCancelText: { color: '#374151', fontSize: 16, fontWeight: '700' },
   footer: {
     padding: 16,
     backgroundColor: '#ffffff',
