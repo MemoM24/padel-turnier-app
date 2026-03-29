@@ -63,3 +63,14 @@ Thumbs.db
 
 # Webdev artifacts (checkpoint zips, migrations, etc.)
 .webdev/
+
+# Manus internal logs
+.manus-logs/
+
+# Environment secrets (never commit real .env)
+.env
+.env.local
+.env.production
+
+# Test artifacts
+test_algorithm.*
