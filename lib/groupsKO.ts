@@ -30,17 +30,27 @@ function shuffle<T>(arr: T[]): T[] {
 /**
  * Divide teams into groups.
  * Rules:
- * - Number of groups = number of active courts (max)
- * - Minimum 3 teams per group
- * - Teams distributed as evenly as possible
+ * - Number of groups = number of active courts (1 group per court)
+ * - No team limit per group – teams are distributed as evenly as possible
+ * - Target group size: 4–5 teams; with few teams minimum 3 per group
+ * - If teams don't divide evenly, some groups get one extra team
  */
 export function formGroups(teams: Team[], activeCourts: Court[]): Group[] {
   const numTeams = teams.length;
   if (numTeams < 3) throw new Error('Mindestens 3 Teams benötigt');
 
-  // Determine number of groups: as many as courts, but at most floor(numTeams/3)
-  const maxGroups = Math.floor(numTeams / 3);
-  const numGroups = Math.min(activeCourts.length, maxGroups);
+  const numCourts = activeCourts.length;
+
+  // Determine ideal number of groups:
+  // We want groups of 4–5 teams. Start with one group per court.
+  // If that would give groups smaller than 3, reduce group count.
+  // If that would give groups larger than 5, increase group count (up to numCourts).
+  let numGroups = numCourts;
+
+  // Ensure minimum 3 teams per group
+  while (numGroups > 1 && Math.floor(numTeams / numGroups) < 3) {
+    numGroups--;
+  }
 
   // Shuffle teams for random group assignment
   const shuffled = shuffle(teams);
@@ -60,10 +70,18 @@ export function formGroups(teams: Team[], activeCourts: Court[]): Group[] {
     });
   }
 
-  // Distribute teams round-robin style across groups
-  shuffled.forEach((team, idx) => {
-    groups[idx % numGroups].teams.push(team);
-  });
+  // Distribute teams as evenly as possible across groups.
+  // Base size = floor(numTeams / numGroups), remainder groups get +1 team.
+  const baseSize = Math.floor(numTeams / numGroups);
+  const remainder = numTeams % numGroups; // first `remainder` groups get baseSize+1 teams
+
+  let teamIdx = 0;
+  for (let g = 0; g < numGroups; g++) {
+    const groupSize = baseSize + (g < remainder ? 1 : 0);
+    for (let i = 0; i < groupSize; i++) {
+      groups[g].teams.push(shuffled[teamIdx++]);
+    }
+  }
 
   // Generate round-robin matches for each group
   groups.forEach((group) => {
