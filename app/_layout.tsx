@@ -1,4 +1,5 @@
 import "@/global.css";
+import { TournamentProvider } from "@/context/TournamentContext";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
@@ -79,6 +80,7 @@ export default function RootLayout() {
   }, [initialInsets, initialFrame]);
 
   const content = (
+    <TournamentProvider>
     <GestureHandlerRootView style={{ flex: 1 }}>
       <trpc.Provider client={trpcClient} queryClient={queryClient}>
         <QueryClientProvider client={queryClient}>
@@ -88,11 +90,19 @@ export default function RootLayout() {
           <Stack screenOptions={{ headerShown: false }}>
             <Stack.Screen name="(tabs)" />
             <Stack.Screen name="oauth/callback" />
+            <Stack.Screen name="tournament-type" options={{ animation: 'slide_from_right' }} />
+            <Stack.Screen name="tournament-settings" options={{ animation: 'slide_from_right' }} />
+            <Stack.Screen name="tournament-players" options={{ animation: 'slide_from_right' }} />
+            <Stack.Screen name="tournament-summary" options={{ animation: 'slide_from_right' }} />
+            <Stack.Screen name="tournament-matches" options={{ animation: 'slide_from_right' }} />
+            <Stack.Screen name="firebase-config" options={{ animation: 'slide_from_right' }} />
+            <Stack.Screen name="join" options={{ animation: 'slide_from_right' }} />
           </Stack>
           <StatusBar style="auto" />
         </QueryClientProvider>
       </trpc.Provider>
     </GestureHandlerRootView>
+    </TournamentProvider>
   );
 
   const shouldOverrideSafeArea = Platform.OS === "web";
