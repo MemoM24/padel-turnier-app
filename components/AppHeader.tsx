@@ -38,8 +38,11 @@ export function AppHeader({
     }
   };
 
+  // Ensure at least 12px padding below the status bar (notch/Dynamic Island)
+  const topPadding = Math.max(insets.top, 44) + 10;
+
   return (
-    <View style={[styles.container, { paddingTop: insets.top + 8 }]}>
+    <View style={[styles.container, { paddingTop: topPadding }]}>
       <View style={styles.row}>
         {/* Left: Back button or PDL1 Logo */}
         <View style={styles.left}>
@@ -108,7 +111,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: 'rgba(0,0,0,0.09)',
     paddingHorizontal: 16,
-    paddingBottom: 10,
+    paddingBottom: 12,
   },
   row: {
     flexDirection: 'row',

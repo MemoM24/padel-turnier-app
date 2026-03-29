@@ -81,3 +81,8 @@
 - [x] IntroScreen: Logo pulsiert einmal (atmet ein/aus, Scale 1.0→1.08→1.0)
 - [x] IntroScreen: Logo verblasst sanft (Fade-Out) nach ~2.5 Sek.
 - [x] IntroScreen in Root-Layout als Overlay integrieren
+
+## Safe Area Fix
+- [x] AppHeader: paddingTop korrekt auf insets.top setzen (kein fester Wert)
+- [x] HomeScreen-Header: paddingTop korrekt auf insets.top setzen
+- [x] Alle Screens mit eigenem Header prüfen und Safe Area sicherstellen

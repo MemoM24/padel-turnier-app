@@ -100,10 +100,13 @@ export default function HomeScreen() {
     );
   };
 
+  // Ensure header sits below status bar / notch / Dynamic Island
+  const headerTop = Math.max(insets.top, 44);
+
   return (
-    <View style={[styles.container, { paddingTop: insets.top }]}>
-      {/* Header */}
-      <View style={styles.header}>
+    <View style={styles.container}>
+      {/* Header – extends behind status bar with correct top padding */}
+      <View style={[styles.header, { paddingTop: headerTop + 10 }]}>
         <View style={styles.headerLeft}>
           <View style={styles.logoBox}>
             <Image
@@ -170,7 +173,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingBottom: 12,
     backgroundColor: '#ffffff',
     borderBottomWidth: 1,
     borderBottomColor: 'rgba(0,0,0,0.09)',
