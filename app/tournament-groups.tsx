@@ -16,6 +16,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTournament } from '@/context/TournamentContext';
 import { AppHeader } from '@/components/AppHeader';
 import { KOBracketView } from '@/components/KOBracketView';
+import { GroupSchedulePreview } from '@/components/GroupSchedulePreview';
 import {
   getGroupStandings,
   updateGroupMatchScore,
@@ -27,7 +28,7 @@ import {
 } from '@/lib/groupsKO';
 import type { Group, KOMatch, Match, Team, SetScore } from '@/types';
 
-type TabId = 'groups' | 'bracket';
+type TabId = 'groups' | 'schedule' | 'bracket';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -714,6 +715,14 @@ export default function TournamentGroupsScreen() {
           </Text>
         </Pressable>
         <Pressable
+          style={[styles.mainTab, activeTab === 'schedule' && styles.mainTabActive]}
+          onPress={() => setActiveTab('schedule')}
+        >
+          <Text style={[styles.mainTabText, activeTab === 'schedule' && styles.mainTabTextActive]}>
+            Spielplan
+          </Text>
+        </Pressable>
+        <Pressable
           style={[styles.mainTab, activeTab === 'bracket' && styles.mainTabActive]}
           onPress={() => setActiveTab('bracket')}
         >
@@ -771,6 +780,16 @@ export default function TournamentGroupsScreen() {
             )}
           </ScrollView>
         </>
+      )}
+
+      {activeTab === 'schedule' && (
+        <ScrollView contentContainerStyle={[styles.groupContent, { paddingTop: 16 }]}>
+          <GroupSchedulePreview
+            groups={groups}
+            teams={teams}
+            defaultExpanded={groups.length === 1}
+          />
+        </ScrollView>
       )}
 
       {activeTab === 'bracket' && koBracket && (

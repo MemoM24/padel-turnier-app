@@ -179,3 +179,8 @@
 - [x] KO-Phase: Playtomic-Satzeingabe (gleiches Modal wie Gruppenphase)
 - [x] KO-Baum: Satzergebnisse als Detail-Zeile unter den Teams anzeigen (z.B. "6:4  3:6  10:8")
 - [x] KO-Baum: Gespielte Matches ebenfalls bearbeitbar (✏️-Icon sichtbar)
+
+## Verbesserungen v11 – Spielplan-Vorschau
+- [x] Spielplan-Vorschau: Vor Turnierstart Spielreihenfolge pro Gruppe anzeigen
+- [x] Spielplan-Vorschau: Matchnummer, Teams, Court-Zuweisung sichtbar
+- [x] Spielplan-Vorschau: Erreichbar aus SummaryScreen und aus Gruppen-Tab (neuer 'Spielplan'-Tab)

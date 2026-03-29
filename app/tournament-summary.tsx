@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import {
   View,
   Text,
@@ -13,6 +13,7 @@ import { useTournament } from '@/context/TournamentContext';
 import { StepIndicator } from '@/components/StepIndicator';
 import { AppHeader } from '@/components/AppHeader';
 import { Avatar } from '@/components/Avatar';
+import { GroupSchedulePreview } from '@/components/GroupSchedulePreview';
 import { useT } from '@/hooks/use-t';
 import {
   createTournament,
@@ -20,7 +21,7 @@ import {
   estimateDuration,
   getAutoRounds,
 } from '@/lib/tournament';
-import { createGroupsKOTournament } from '@/lib/groupsKO';
+import { createGroupsKOTournament, formGroups } from '@/lib/groupsKO';
 import { addSavedPlayers } from '@/lib/storage';
 import type { TournamentSettings } from '@/types';
 
@@ -55,6 +56,18 @@ export default function TournamentSummaryScreen() {
   const isGroupsKO = type === 'groups_ko';
   const s = settings as TournamentSettings;
   const activeCourts = (s.courts ?? []).filter((c) => c.active);
+
+  // Pre-generate groups for the schedule preview (groups_ko only)
+  // We use useMemo so the groups are stable across re-renders but regenerated
+  // if teams or courts change. The actual tournament creation uses a fresh call.
+  const previewGroups = useMemo(() => {
+    if (!isGroupsKO || !teams || teams.length < 3 || activeCourts.length === 0) return null;
+    try {
+      return formGroups(teams, activeCourts);
+    } catch {
+      return null;
+    }
+  }, [isGroupsKO, teams, activeCourts]);
   const rounds = s.numRounds === 0 ? getAutoRounds(players.length) : (s.numRounds ?? 0);
   const totalMatches = calculateTotalMatches(players.length, rounds, activeCourts.length);
   const durationMinutes = estimateDuration(totalMatches, s.gameMode ?? 'points', s.gameTimeMinutes ?? 10);
@@ -175,6 +188,15 @@ export default function TournamentSummaryScreen() {
             </View>
           )}
         </View>
+
+        {/* Schedule Preview (groups_ko only) */}
+        {isGroupsKO && previewGroups && teams && (
+          <GroupSchedulePreview
+            groups={previewGroups}
+            teams={teams}
+            defaultExpanded={previewGroups.length === 1}
+          />
+        )}
       </ScrollView>
 
       <View style={[styles.footer, { paddingBottom: insets.bottom + 16 }]}>
