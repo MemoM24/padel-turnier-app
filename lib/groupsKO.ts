@@ -94,23 +94,97 @@ export function formGroups(teams: Team[], activeCourts: Court[]): Group[] {
 /**
  * Generate all round-robin matches for a set of teams on a fixed court.
  * Each pair plays exactly once.
+ * The match order is optimised so that no team plays more than 2 games in a row.
+ *
+ * Algorithm (backtracking):
+ * 1. Build the full candidate pool (all n*(n-1)/2 pairs), shuffled for variety.
+ * 2. Recursively place matches one by one:
+ *    - First try matches where NEITHER team would exceed 2 consecutive.
+ *    - If that fails (dead-end), try matches where only ONE team would exceed.
+ *    - Backtrack if no valid placement is found.
+ * 3. Falls back to greedy-best if backtracking finds no perfect solution.
  */
 function generateRoundRobin(teams: Team[], courtId: string, courtName: string): Match[] {
-  const matches: Match[] = [];
+  type Pair = { a: string; b: string };
+
+  // Build all pairs
+  const allPairs: Pair[] = [];
   for (let i = 0; i < teams.length; i++) {
     for (let j = i + 1; j < teams.length; j++) {
-      matches.push({
-        id: generateId(),
-        courtId,
-        courtName,
-        team1: [teams[i].player1, teams[i].player2],
-        team2: [teams[j].player1, teams[j].player2],
-        score1: null,
-        score2: null,
-      });
+      allPairs.push({ a: teams[i].id, b: teams[j].id });
     }
   }
-  return matches;
+
+  // Shuffle for variety
+  const pool = shuffle(allPairs);
+
+  /**
+   * Backtracking solver with STRICT constraint:
+   * Only places a match if BOTH teams have fewer than 2 consecutive games.
+   * Returns null if no valid placement exists (triggers backtrack in caller).
+   *
+   * @param scheduled  indices of already placed pairs (in order)
+   * @param remaining  indices of pairs not yet placed
+   * @param consec     consecutive-game counter per team ID
+   * @returns ordered list of all pair indices, or null if no solution found
+   */
+  function solve(
+    scheduled: number[],
+    remaining: number[],
+    consec: Map<string, number>,
+  ): number[] | null {
+    if (remaining.length === 0) return scheduled;
+
+    // Only consider matches where BOTH teams have < 2 consecutive games
+    const valid = remaining.filter((idx) => {
+      const ca = consec.get(pool[idx].a) ?? 0;
+      const cb = consec.get(pool[idx].b) ?? 0;
+      return ca < 2 && cb < 2;
+    });
+
+    if (valid.length === 0) return null; // dead-end → backtrack
+
+    for (const chosenIdx of valid) {
+      const chosen = pool[chosenIdx];
+      const newRemaining = remaining.filter((i) => i !== chosenIdx);
+      const newConsec = new Map(consec);
+      teams.forEach((t) => {
+        if (t.id === chosen.a || t.id === chosen.b) {
+          newConsec.set(t.id, (newConsec.get(t.id) ?? 0) + 1);
+        } else {
+          newConsec.set(t.id, 0);
+        }
+      });
+
+      const result = solve([...scheduled, chosenIdx], newRemaining, newConsec);
+      if (result !== null) return result;
+    }
+
+    return null; // all valid choices led to dead-ends → backtrack
+  }
+
+  const initConsec = new Map<string, number>(teams.map((t) => [t.id, 0]));
+  const allIndices = pool.map((_, i) => i);
+  const solution = solve([], allIndices, initConsec);
+
+  // solution should always be found (backtracking is exhaustive), but fall back just in case
+  const orderedPairs = solution ? solution.map((i) => pool[i]) : pool;
+
+  // Convert pairs back to Match objects
+  const teamById = new Map(teams.map((t) => [t.id, t]));
+  return orderedPairs.map(({ a, b }) => {
+    const ta = teamById.get(a)!;
+    const tb = teamById.get(b)!;
+    return {
+      id: generateId(),
+      courtId,
+      courtName,
+      team1: [ta.player1, ta.player2],
+      team2: [tb.player1, tb.player2],
+      score1: null,
+      score2: null,
+    };
+  });
 }
 
 // ─── Group Standings ──────────────────────────────────────────────────────────

@@ -169,9 +169,9 @@
 - [x] Einstellungen: "Punkte pro Runde" ausblenden wenn Zeit-Modus gewählt
 
 ## Verbesserungen v9 – Punktesystem & Paarungen
-- [ ] Satz-Ergebnis-Eingabe: Playtomic-Stil (Satz 1, Satz 2, Satz 3 mit automatischer Gewinnererkennung)
-- [ ] Punktevergabe: +3 bei Sieg, +1 bei Unentschieden (2 Sätze gespielt, 3. nicht beendet, Punktgleichheit)
-- [ ] Paarungsalgorithmus: Max. 2 aufeinanderfolgende Spiele pro Team
+- [x] Satz-Ergebnis-Eingabe: Playtomic-Stil (Satz 1, Satz 2, Satz 3 mit automatischer Gewinnererkennung)
+- [x] Punktevergabe: +3 bei Sieg, +1 bei Unentschieden (2 Sätze gespielt, 3. nicht beendet, Punktgleichheit)
+- [x] Paarungsalgorithmus: Max. 2 aufeinanderfolgende Spiele pro Team (Backtracking-Algorithmus)
 
 ## Verbesserungen v10 – Swipe/Edit/KO-Sets
 - [x] Swipe-to-Delete für Turnierhistorie (Swipeable mit rotem Löschen-Button + Bestätigungsdialog)
