@@ -95,3 +95,8 @@
 - [x] Spielplan-Screen: Spieler links/rechts, Score-Buttons in der Mitte (Padelmix-Layout)
 - [x] Spielplan-Screen: "Pausierende Spieler" Sektion unten
 - [x] Zusammenfassung: Detaillierte Turnierbeschreibung (Spielmodus, Regeln, Runden, Matches, Dauer)
+
+## Runden-Navigation
+- [x] Runden-Tabs klickbar: vergangene Runden als Read-only anzeigen
+- [x] Aktuelle Runde bleibt editierbar, vergangene nur lesbar
+- [x] Gespeicherte Scores in vergangenen Runden korrekt anzeigen

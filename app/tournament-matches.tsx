@@ -382,6 +382,7 @@ export default function TournamentMatchesScreen() {
 
   const [activeTab, setActiveTab] = useState<'matches' | 'standings'>('matches');
   const [scores, setScores] = useState<Record<string, { s1: number | null; s2: number | null }>>({});
+  const [selectedRound, setSelectedRound] = useState<number | null>(null); // null = current round
   const [scoreModal, setScoreModal] = useState<{
     visible: boolean;
     matchId: string;
@@ -407,20 +408,26 @@ export default function TournamentMatchesScreen() {
   const pointsPerRound = tournament.settings.pointsPerRound ?? 24;
   const currentRoundIndex = tournament.currentRound - 1;
   const currentRound = tournament.rounds[currentRoundIndex];
+  // For viewing: if selectedRound is set and it's a past round, show that round read-only
+  const viewingRoundIndex = selectedRound !== null ? selectedRound - 1 : currentRoundIndex;
+  const viewingRound = tournament.rounds[viewingRoundIndex];
+  const isViewingPastRound = selectedRound !== null && selectedRound < tournament.currentRound;
   const totalRounds =
     tournament.settings.numRounds === 0
       ? Math.max(tournament.players.length - 1, 4)
       : tournament.settings.numRounds;
 
   const allScoresEntered =
-    currentRound?.matches.every((m) => {
+    !isViewingPastRound &&
+    (currentRound?.matches.every((m) => {
       const s = scores[m.id];
       return s && s.s1 !== null && s.s2 !== null;
-    }) ?? false;
+    }) ?? false);
 
   const isLastRound = tournament.currentRound >= totalRounds;
 
   const openScoreModal = (matchId: string, team: 1 | 2) => {
+    if (isViewingPastRound) return; // read-only for past rounds
     const match = currentRound?.matches.find((m) => m.id === matchId);
     if (!match) return;
     const teamNames = team === 1 ? match.team1 : match.team2;
@@ -486,6 +493,7 @@ export default function TournamentMatchesScreen() {
   const timerSeconds = (tournament.settings.gameTimeMinutes ?? 10) * 60;
 
   // ── Round Tabs (horizontal scroll) ──────────────────────────────────────────
+  const activeRoundTab = selectedRound ?? tournament.currentRound;
   const renderRoundTabs = () => (
     <ScrollView
       horizontal
@@ -494,17 +502,21 @@ export default function TournamentMatchesScreen() {
       contentContainerStyle={styles.roundTabsContent}
     >
       {Array.from({ length: tournament.rounds.length }, (_, i) => i + 1).map((r) => (
-        <View
+        <Pressable
           key={r}
-          style={[
-            styles.roundTab,
-            r === tournament.currentRound && styles.roundTabActive,
-          ]}
+          style={[styles.roundTab, r === activeRoundTab && styles.roundTabActive]}
+          onPress={() => {
+            if (r === tournament.currentRound) {
+              setSelectedRound(null); // back to current (editable)
+            } else {
+              setSelectedRound(r);
+            }
+          }}
         >
-          <Text style={[styles.roundTabText, r === tournament.currentRound && styles.roundTabTextActive]}>
+          <Text style={[styles.roundTabText, r === activeRoundTab && styles.roundTabTextActive]}>
             {r}
           </Text>
-        </View>
+        </Pressable>
       ))}
       <Text style={styles.roundTabLabel}>Runden</Text>
     </ScrollView>
@@ -552,15 +564,29 @@ export default function TournamentMatchesScreen() {
     </ScrollView>
   );
 
+  // Build read-only scores map from saved round data (for past rounds)
+  const pastRoundScores: Record<string, { s1: number | null; s2: number | null }> = {};
+  if (isViewingPastRound && viewingRound) {
+    for (const m of viewingRound.matches) {
+      pastRoundScores[m.id] = { s1: m.score1, s2: m.score2 };
+    }
+  }
+  const displayScores = isViewingPastRound ? pastRoundScores : scores;
+
   // ── Matches Tab ──────────────────────────────────────────────────────────────
   const renderMatchesTab = () => (
     <FlatList
-      data={currentRound?.matches ?? []}
+      data={viewingRound?.matches ?? []}
       keyExtractor={(item) => item.id}
       contentContainerStyle={[styles.matchesContent, { paddingBottom: insets.bottom + 120 }]}
       ListHeaderComponent={
         <View style={styles.roundHeader}>
-          {tournament.settings.gameMode === 'time' && (
+          {isViewingPastRound && (
+            <View style={styles.pastRoundBanner}>
+              <Text style={styles.pastRoundBannerText}>📋 Runde {selectedRound} – Nur Ansicht</Text>
+            </View>
+          )}
+          {!isViewingPastRound && tournament.settings.gameMode === 'time' && (
             <Pressable
               style={({ pressed }) => [styles.timerStartBtn, pressed && { opacity: 0.7 }]}
               onPress={() => setTimerVisible(true)}
@@ -571,14 +597,14 @@ export default function TournamentMatchesScreen() {
         </View>
       }
       renderItem={({ item }) => (
-        <MatchCard match={item} scores={scores} onScorePress={openScoreModal} />
+        <MatchCard match={item} scores={displayScores} onScorePress={openScoreModal} />
       )}
       ListFooterComponent={
-        currentRound?.byePlayers?.length ? (
+        viewingRound?.byePlayers?.length ? (
           <View style={styles.byeBox}>
             <Text style={styles.byeTitle}>⬛ Pausierende Spieler</Text>
             <View style={styles.byePlayersList}>
-              {currentRound.byePlayers.map((name, i) => (
+              {viewingRound.byePlayers.map((name, i) => (
                 <Text key={i} style={styles.byePlayerName}>{name}</Text>
               ))}
             </View>
@@ -627,7 +653,7 @@ export default function TournamentMatchesScreen() {
       </View>
 
       {/* Footer Action */}
-      {activeTab === 'matches' && !tournament.finished && (
+      {activeTab === 'matches' && !tournament.finished && !isViewingPastRound && (
         <View style={[styles.actionFooter, { paddingBottom: insets.bottom + 16 }]}>
           <Pressable
             style={({ pressed }) => [
@@ -747,6 +773,21 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   timerStartBtnText: { color: '#fff', fontSize: 13, fontWeight: '600' },
+
+  // Past round read-only banner
+  pastRoundBanner: {
+    flex: 1,
+    backgroundColor: '#1e3a5f',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    alignItems: 'center',
+  },
+  pastRoundBannerText: {
+    color: '#93c5fd',
+    fontSize: 13,
+    fontWeight: '600',
+  },
 
   // Match Card (Padelmix-style)
   matchCard: {
