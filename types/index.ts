@@ -73,4 +73,5 @@ export interface WizardState {
   type: TournamentType | null;
   settings: Partial<TournamentSettings>;
   players: string[];
+  tournamentName: string;
 }

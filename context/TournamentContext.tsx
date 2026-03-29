@@ -14,6 +14,7 @@ interface TournamentContextValue {
   setWizardType: (type: TournamentType) => void;
   setWizardSettings: (settings: Partial<TournamentSettings>) => void;
   setWizardPlayers: (players: string[]) => void;
+  setWizardName: (name: string) => void;
   resetWizard: () => void;
 
   // Language
@@ -27,6 +28,7 @@ interface TournamentContextValue {
 
 const defaultWizard: WizardState = {
   type: null,
+  tournamentName: '',
   settings: {
     pointsPerRound: 24,
     numRounds: 0,
@@ -75,6 +77,10 @@ export function TournamentProvider({ children }: { children: ReactNode }) {
     setWizard((prev) => ({ ...prev, players }));
   }, []);
 
+  const setWizardName = useCallback((tournamentName: string) => {
+    setWizard((prev) => ({ ...prev, tournamentName }));
+  }, []);
+
   const resetWizard = useCallback(() => {
     setWizard(defaultWizard);
   }, []);
@@ -97,6 +103,7 @@ export function TournamentProvider({ children }: { children: ReactNode }) {
         setWizardType,
         setWizardSettings,
         setWizardPlayers,
+        setWizardName,
         resetWizard,
         language,
         toggleLanguage,

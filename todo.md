@@ -58,3 +58,26 @@
 - [x] App-Name auf "PDL1" aktualisieren
 - [x] Header-Logo auf PDL1 aktualisieren
 - [x] Splash-Screen-Hintergrundfarbe auf Schwarz anpassen
+
+## Fehlende Features aus Spezifikation v2
+- [ ] Turniername-Eingabe im Wizard (Schritt 1 oder Zusammenfassung)
+- [ ] QR-Code-Modal (Bottom Sheet mit QR-Code + URL kopieren)
+- [ ] QR-Code-Paket installieren (react-native-qrcode-svg)
+- [ ] Score-Modal: Grid 0–9 + "10+" Zellen (6×2 Layout)
+- [ ] Score-Modal: Ausgewählte Zahl grün markiert
+- [ ] BYE-Box: gelber Hintergrund für aussetzende Spieler
+- [ ] Timer: Warnung bei 3 Min (gelb), Danger bei 1 Min (rot + Blinken)
+- [ ] Timer: Fortschrittsbalken
+- [ ] Viewer-Screen (screen-viewer): Live Spielplan + Tabelle per Firebase
+- [ ] Firebase Live-Sync: Turnierdaten unter tournaments/{id}
+- [ ] Firebase Live-Sync: Joiner-Genehmigung (pending/approved/rejected)
+- [ ] Pending-Bereich im Spieler-Screen für Admin
+- [ ] Mini-Avatare in der Turnier-Historie
+- [ ] Live-Badge / Beendet-Badge in der Historie
+- [ ] Turnier fortsetzen bei Klick auf History-Karte
+
+## Intro-Animation (Netflix-Stil)
+- [x] IntroScreen: schwarzer Hintergrund, PDL1-Logo erscheint aus Mitte (Scale-In + Fade-In)
+- [x] IntroScreen: Logo pulsiert einmal (atmet ein/aus, Scale 1.0→1.08→1.0)
+- [x] IntroScreen: Logo verblasst sanft (Fade-Out) nach ~2.5 Sek.
+- [x] IntroScreen in Root-Layout als Overlay integrieren

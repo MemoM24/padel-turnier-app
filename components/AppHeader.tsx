@@ -75,7 +75,7 @@ export function AppHeader({
 
         {/* Right: QR + Language Toggle */}
         <View style={styles.right}>
-          {showQR && (
+          {(showQR || !!onQRPress) && (
             <Pressable
               onPress={onQRPress}
               style={({ pressed }) => [styles.iconBtn, pressed && { opacity: 0.6 }]}

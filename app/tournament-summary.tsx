@@ -53,7 +53,7 @@ export default function TournamentSummaryScreen() {
       gameTimeMinutes: s.gameTimeMinutes ?? 10,
       courts: s.courts ?? [],
     };
-    const tournament = createTournament(players, fullSettings);
+    const tournament = createTournament(players, fullSettings, wizard.tournamentName);
     await addSavedPlayers(players);
     await saveTournament(tournament);
     router.replace('/tournament-matches' as any);

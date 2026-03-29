@@ -16,6 +16,7 @@ function shuffle<T>(arr: T[]): T[] {
 export function createTournament(
   playerNames: string[],
   settings: TournamentSettings,
+  tournamentName?: string,
 ): Tournament {
   const players: Player[] = playerNames.map((name) => ({
     id: generateId(),
@@ -26,7 +27,7 @@ export function createTournament(
 
   const tournament: Tournament = {
     id: generateId(),
-    name: `Turnier ${new Date().toLocaleDateString('de-DE')}`,
+    name: tournamentName?.trim() || `Turnier ${new Date().toLocaleDateString('de-DE')}`,
     createdAt: new Date().toISOString(),
     settings,
     players,

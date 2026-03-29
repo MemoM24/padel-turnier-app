@@ -6,9 +6,10 @@ import { StatusBar } from "expo-status-bar";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import "react-native-reanimated";
-import { Platform } from "react-native";
+import { Platform, View } from "react-native";
 import "@/lib/_core/nativewind-pressable";
 import { ThemeProvider } from "@/lib/theme-provider";
+import { IntroScreen } from "@/components/IntroScreen";
 import {
   SafeAreaFrameContext,
   SafeAreaInsetsContext,
@@ -33,6 +34,7 @@ export default function RootLayout() {
 
   const [insets, setInsets] = useState<EdgeInsets>(initialInsets);
   const [frame, setFrame] = useState<Rect>(initialFrame);
+  const [showIntro, setShowIntro] = useState(true);
 
   // Initialize Manus runtime for cookie injection from parent container
   useEffect(() => {
@@ -81,6 +83,7 @@ export default function RootLayout() {
 
   const content = (
     <TournamentProvider>
+    <View style={{ flex: 1 }}>
     <GestureHandlerRootView style={{ flex: 1 }}>
       <trpc.Provider client={trpcClient} queryClient={queryClient}>
         <QueryClientProvider client={queryClient}>
@@ -102,6 +105,8 @@ export default function RootLayout() {
         </QueryClientProvider>
       </trpc.Provider>
     </GestureHandlerRootView>
+    {showIntro && <IntroScreen onFinish={() => setShowIntro(false)} />}
+    </View>
     </TournamentProvider>
   );
 

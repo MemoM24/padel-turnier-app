@@ -10,6 +10,7 @@ import {
   Alert,
   ScrollView,
 } from 'react-native';
+import { QRModal } from '@/components/QRModal';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTournament } from '@/context/TournamentContext';
@@ -320,6 +321,7 @@ export default function TournamentMatchesScreen() {
     currentScore: number | null;
   }>({ visible: false, matchId: '', team: 1, teamLabel: '', currentScore: null });
   const [timerVisible, setTimerVisible] = useState(false);
+  const [qrVisible, setQrVisible] = useState(false);
 
   if (!tournament) {
     return (
@@ -506,6 +508,7 @@ export default function TournamentMatchesScreen() {
         subtitle={`${t('round')} ${tournament.currentRound}/${totalRounds}`}
         showBack
         showLanguageToggle
+        onQRPress={() => setQrVisible(true)}
       />
 
       {/* Tab Bar */}
@@ -567,6 +570,14 @@ export default function TournamentMatchesScreen() {
         visible={timerVisible}
         totalSeconds={timerSeconds}
         onClose={() => setTimerVisible(false)}
+      />
+
+      {/* QR Modal */}
+      <QRModal
+        visible={qrVisible}
+        tournamentId={tournament.id}
+        tournamentName={tournament.name}
+        onClose={() => setQrVisible(false)}
       />
     </View>
   );
