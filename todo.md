@@ -52,3 +52,9 @@
 - [x] Turnier beenden (als finished markieren)
 - [ ] QR-Code-Generierung (react-native-qrcode-svg)
 - [ ] Firebase Live-Sync (optional)
+
+## PDL1 Branding Integration
+- [x] PDL1-Logo als App-Icon (icon.png, splash-icon.png, favicon.png, android-icon-foreground.png)
+- [x] App-Name auf "PDL1" aktualisieren
+- [x] Header-Logo auf PDL1 aktualisieren
+- [x] Splash-Screen-Hintergrundfarbe auf Schwarz anpassen

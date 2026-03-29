@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, Pressable, StyleSheet } from 'react-native';
+import { View, Text, Pressable, StyleSheet, Image } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useTournament } from '@/context/TournamentContext';
@@ -41,7 +41,7 @@ export function AppHeader({
   return (
     <View style={[styles.container, { paddingTop: insets.top + 8 }]}>
       <View style={styles.row}>
-        {/* Left: Back button or Logo */}
+        {/* Left: Back button or PDL1 Logo */}
         <View style={styles.left}>
           {showBack ? (
             <Pressable
@@ -51,8 +51,12 @@ export function AppHeader({
               <Text style={styles.backText}>‹</Text>
             </Pressable>
           ) : (
-            <View style={styles.logo}>
-              <Text style={styles.logoText}>🎾</Text>
+            <View style={styles.logoContainer}>
+              <Image
+                source={require('@/assets/images/icon.png')}
+                style={styles.logoImage}
+                resizeMode="contain"
+              />
             </View>
           )}
         </View>
@@ -139,21 +143,26 @@ const styles = StyleSheet.create({
     color: '#111',
     lineHeight: 28,
   },
-  logo: {
-    width: 36,
-    height: 36,
+  logoContainer: {
+    width: 40,
+    height: 40,
     borderRadius: 8,
-    backgroundColor: '#1a9e6f',
+    backgroundColor: '#ffffff',
     alignItems: 'center',
     justifyContent: 'center',
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.08)',
   },
-  logoText: {
-    fontSize: 20,
+  logoImage: {
+    width: 38,
+    height: 38,
   },
   title: {
     fontSize: 17,
-    fontWeight: '600',
+    fontWeight: '700',
     color: '#111',
+    letterSpacing: 0.3,
   },
   subtitle: {
     fontSize: 12,

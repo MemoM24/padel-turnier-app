@@ -2,7 +2,7 @@ export type Language = 'de' | 'en';
 
 const translations = {
   de: {
-    appName: 'Padel Turnier',
+    appName: 'PDL1',
     appSubtitle: 'Turnierverwaltung',
     newTournament: '+ Neues Turnier erstellen',
     history: 'Turnier-Historie',
@@ -98,7 +98,7 @@ const translations = {
     language: 'DE',
   },
   en: {
-    appName: 'Padel Tournament',
+    appName: 'PDL1',
     appSubtitle: 'Tournament Manager',
     newTournament: '+ Create New Tournament',
     history: 'Tournament History',

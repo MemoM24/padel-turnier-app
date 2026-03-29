@@ -7,9 +7,9 @@ const timestamp = bundleId.split(".").pop()?.replace(/^t/, "") ?? "";
 const schemeFromBundleId = `manus${timestamp}`;
 
 const env = {
-  appName: "Padel Turnier",
+  appName: "PDL1",
   appSlug: "padel-turnier-app",
-  logoUrl: "https://d2xsxph8kpxj0f.cloudfront.net/111633462/ZrpCBStHXWSu4kaRceHoZa/icon-eRdXpmFRxY2m5LLskrUhsx.png",
+  logoUrl: "https://d2xsxph8kpxj0f.cloudfront.net/111633462/ZrpCBStHXWSu4kaRceHoZa/icon_224d45a0.png",
   scheme: schemeFromBundleId,
   iosBundleId: bundleId,
   androidPackage: bundleId,
@@ -63,8 +63,8 @@ const config: ExpoConfig = {
         image: "./assets/images/splash-icon.png",
         imageWidth: 200,
         resizeMode: "contain",
-        backgroundColor: "#1a9e6f",
-        dark: { backgroundColor: "#0d6b4a" },
+        backgroundColor: "#ffffff",
+        dark: { backgroundColor: "#000000" },
       },
     ],
     ["expo-build-properties", { android: { buildArchs: ["armeabi-v7a", "arm64-v8a"] } }],

@@ -6,6 +6,7 @@ import {
   Pressable,
   StyleSheet,
   RefreshControl,
+  Image,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -105,7 +106,11 @@ export default function HomeScreen() {
       <View style={styles.header}>
         <View style={styles.headerLeft}>
           <View style={styles.logoBox}>
-            <Text style={styles.logoEmoji}>🎾</Text>
+            <Image
+              source={require('@/assets/images/icon.png')}
+              style={styles.logoImage}
+              resizeMode="contain"
+            />
           </View>
           <View>
             <Text style={styles.appTitle}>{t('appName')}</Text>
@@ -179,12 +184,16 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 10,
-    backgroundColor: '#1a9e6f',
+    backgroundColor: '#ffffff',
     alignItems: 'center',
     justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.08)',
+    overflow: 'hidden',
   },
-  logoEmoji: {
-    fontSize: 22,
+  logoImage: {
+    width: 38,
+    height: 38,
   },
   appTitle: {
     fontSize: 18,
