@@ -13,6 +13,7 @@ interface AppHeaderProps {
   showQR?: boolean;
   pendingCount?: number;
   onQRPress?: () => void;
+  onJoinPress?: () => void;
   onBackPress?: () => void;
 }
 
@@ -24,6 +25,7 @@ export function AppHeader({
   showQR = false,
   pendingCount = 0,
   onQRPress,
+  onJoinPress,
   onBackPress,
 }: AppHeaderProps) {
   const insets = useSafeAreaInsets();
@@ -76,19 +78,27 @@ export function AppHeader({
           ) : null}
         </View>
 
-        {/* Right: QR + Language Toggle */}
+        {/* Right: Join + QR + Language Toggle */}
         <View style={styles.right}>
+          {!!onJoinPress && (
+            <Pressable
+              onPress={onJoinPress}
+              style={({ pressed }) => [styles.joinBtn, pressed && { opacity: 0.6 }]}
+            >
+              <Text style={styles.joinBtnText}>＋</Text>
+              {pendingCount > 0 && (
+                <View style={styles.badge}>
+                  <Text style={styles.badgeText}>{pendingCount}</Text>
+                </View>
+              )}
+            </Pressable>
+          )}
           {(showQR || !!onQRPress) && (
             <Pressable
               onPress={onQRPress}
               style={({ pressed }) => [styles.iconBtn, pressed && { opacity: 0.6 }]}
             >
               <Text style={styles.iconText}>📲</Text>
-              {pendingCount > 0 && (
-                <View style={styles.badge}>
-                  <Text style={styles.badgeText}>{pendingCount}</Text>
-                </View>
-              )}
             </Pressable>
           )}
           {showLanguageToggle && (
@@ -127,11 +137,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   right: {
-    width: 80,
+    width: 120,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'flex-end',
-    gap: 8,
+    gap: 6,
   },
   backBtn: {
     width: 36,
@@ -182,6 +192,20 @@ const styles = StyleSheet.create({
   },
   iconText: {
     fontSize: 18,
+  },
+  joinBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#1a9e6f',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  joinBtnText: {
+    fontSize: 22,
+    color: '#ffffff',
+    lineHeight: 26,
+    fontWeight: '700',
   },
   badge: {
     position: 'absolute',

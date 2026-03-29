@@ -89,7 +89,7 @@ export function IntroScreen({ onFinish }: IntroScreenProps) {
         ]}
       >
         <Image
-          source={require('@/assets/images/icon.png')}
+          source={require('@/assets/images/pdl1_logo_transparent.png')}
           style={styles.logo}
           resizeMode="contain"
         />
@@ -115,7 +115,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   logo: {
-    width: 200,
-    height: 120,
+    width: 280,
+    height: 168,
   },
 });

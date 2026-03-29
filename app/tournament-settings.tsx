@@ -5,7 +5,6 @@ import {
   ScrollView,
   Pressable,
   StyleSheet,
-  TextInput,
   Alert,
 } from 'react-native';
 import { useRouter } from 'expo-router';
@@ -15,6 +14,32 @@ import { StepIndicator } from '@/components/StepIndicator';
 import { AppHeader } from '@/components/AppHeader';
 import { t } from '@/i18n';
 import type { Court, GameMode } from '@/types';
+import Svg, { Rect, Line, Circle, Ellipse } from 'react-native-svg';
+
+// Mini padel court icon rendered with SVG
+function CourtIcon({ active }: { active: boolean }) {
+  const stroke = active ? '#0d6b4a' : '#9BA1A6';
+  const fill = active ? '#c8f0de' : '#e8e8e8';
+  return (
+    <Svg width={48} height={32} viewBox="0 0 48 32">
+      {/* Court outline */}
+      <Rect x="2" y="2" width="44" height="28" rx="2" fill={fill} stroke={stroke} strokeWidth="1.5" />
+      {/* Center line */}
+      <Line x1="24" y1="2" x2="24" y2="30" stroke={stroke} strokeWidth="1" />
+      {/* Service boxes - horizontal lines */}
+      <Line x1="2" y1="16" x2="46" y2="16" stroke={stroke} strokeWidth="1" />
+      {/* Net */}
+      <Rect x="22" y="6" width="4" height="20" rx="1" fill={active ? '#1a9e6f' : '#aaa'} />
+      {/* Corner glass walls indicators */}
+      <Rect x="2" y="2" width="6" height="4" rx="1" fill={active ? '#1a9e6f' : '#bbb'} opacity="0.5" />
+      <Rect x="40" y="2" width="6" height="4" rx="1" fill={active ? '#1a9e6f' : '#bbb'} opacity="0.5" />
+      <Rect x="2" y="26" width="6" height="4" rx="1" fill={active ? '#1a9e6f' : '#bbb'} opacity="0.5" />
+      <Rect x="40" y="26" width="6" height="4" rx="1" fill={active ? '#1a9e6f' : '#bbb'} opacity="0.5" />
+      {/* Ball */}
+      <Circle cx="12" cy="10" r="2" fill={active ? '#1a9e6f' : '#aaa'} />
+    </Svg>
+  );
+}
 
 function Stepper({
   label,
@@ -199,15 +224,20 @@ export default function TournamentSettingsScreen() {
                 ]}
                 onPress={() => toggleCourt(court.id)}
               >
+                <CourtIcon active={court.active} />
                 <Text style={[styles.courtBtnText, court.active && styles.courtBtnTextActive]}>
                   {court.name}
                 </Text>
+                {court.active && (
+                  <View style={styles.courtActiveDot} />
+                )}
               </Pressable>
             ))}
             <Pressable
               style={({ pressed }) => [styles.courtAddBtn, pressed && { opacity: 0.7 }]}
               onPress={addCourt}
             >
+              <Text style={styles.courtAddIcon}>＋</Text>
               <Text style={styles.courtAddBtnText}>{t('addCourt')}</Text>
             </Pressable>
           </View>
@@ -281,27 +311,46 @@ const styles = StyleSheet.create({
   modeBtnActive: { backgroundColor: '#e0f5ec', borderColor: '#1a9e6f' },
   modeBtnText: { fontSize: 13, fontWeight: '600', color: '#6b7280' },
   modeBtnTextActive: { color: '#0d6b4a' },
-  courtGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  courtGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
   courtBtn: {
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 8,
+    width: '47%',
+    alignItems: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 8,
+    borderRadius: 12,
     backgroundColor: '#f4f5f3',
-    borderWidth: 1,
+    borderWidth: 1.5,
     borderColor: 'rgba(0,0,0,0.09)',
+    gap: 6,
+    position: 'relative',
   },
   courtBtnActive: { backgroundColor: '#e0f5ec', borderColor: '#1a9e6f' },
-  courtBtnText: { fontSize: 13, fontWeight: '600', color: '#6b7280' },
+  courtBtnText: { fontSize: 12, fontWeight: '600', color: '#6b7280' },
   courtBtnTextActive: { color: '#0d6b4a' },
+  courtActiveDot: {
+    position: 'absolute',
+    top: 6,
+    right: 8,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#1a9e6f',
+  },
   courtAddBtn: {
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 8,
-    borderWidth: 1,
+    width: '47%',
+    alignItems: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 8,
+    borderRadius: 12,
+    borderWidth: 1.5,
     borderColor: '#1a9e6f',
     borderStyle: 'dashed',
+    gap: 6,
+    justifyContent: 'center',
+    minHeight: 80,
   },
-  courtAddBtnText: { fontSize: 13, fontWeight: '600', color: '#1a9e6f' },
+  courtAddIcon: { fontSize: 20, color: '#1a9e6f' },
+  courtAddBtnText: { fontSize: 12, fontWeight: '600', color: '#1a9e6f' },
   footer: {
     padding: 16,
     backgroundColor: '#ffffff',

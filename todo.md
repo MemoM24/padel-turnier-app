@@ -107,3 +107,13 @@
 - [x] Viewer-Webseite: Tabelle + alle Runden-Ergebnisse (Read-only, kein Login)
 - [x] App: Turnier beim Speichern automatisch auf Server hochladen (non-blocking sync)
 - [x] QR-Code zeigt Viewer-URL (öffentlich im Browser öffenbar)
+
+## Verbesserungen v3 (Screenshots)
+- [ ] Logo freigestellt: weißen Rahmen im IntroScreen entfernen (Logo direkt auf Schwarz)
+- [x] Viewer-URL "Not Found" Fix: viewer.html in _core/ kopiert, Route korrekt registriert
+- [x] Viewer: Auto-Refresh alle 30 Sekunden
+- [x] Spieler-Input: Enter/Done-Taste fügt Spieler direkt hinzu und fokussiert nächstes Feld
+- [x] Court-Icons: SVG-Court-Grafik bei Court-Auswahl in Schritt 2 (Einstellungen)
+- [x] Grüner Plus-Button oben rechts im Spielplan-Screen (Join-QR öffnen)
+- [x] Spieler-Join per QR: separater Join-QR-Code (nicht Viewer-QR), Browser-Formular
+- [x] Admin-Bestätigung: Pending-Liste für beitretende Spieler (Ja/Nein) mit Echtzeit-Polling
