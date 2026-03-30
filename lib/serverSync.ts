@@ -8,7 +8,8 @@ import { Platform } from "react-native";
 import { Tournament } from "@/types";
 
 // Deployed production domain for the viewer (always accessible)
-const PRODUCTION_DOMAIN = "https://padeltourn-zrpcbsth.manus.space";
+// Railway backend URL – used when EXPO_PUBLIC_API_BASE_URL is not set
+const PRODUCTION_DOMAIN = "https://padel-turnier-app-production.up.railway.app";
 
 function getApiBase(): string {
   // On native, EXPO_PUBLIC_API_BASE_URL is set by the platform

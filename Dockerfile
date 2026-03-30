@@ -29,21 +29,26 @@ WORKDIR /app
 # Copy dependency manifests
 COPY package.json pnpm-lock.yaml* ./
 
-# Install production dependencies only (mysql2, drizzle-orm, express, etc.)
-RUN pnpm install --frozen-lockfile --prod
+# Install ALL dependencies (prod + dev needed for drizzle-kit migrations)
+RUN pnpm install --frozen-lockfile
 
 # Copy the built server bundle from builder stage
 COPY --from=builder /app/dist ./dist
 
-# Copy drizzle migration files (needed at runtime for db:push)
+# Copy drizzle migration files and config (needed for db:push at runtime)
 COPY --from=builder /app/drizzle ./drizzle
+COPY --from=builder /app/drizzle.config.ts ./drizzle.config.ts
+
+# Copy start script
+COPY docker-start.sh ./docker-start.sh
+RUN chmod +x ./docker-start.sh
 
 # Expose the port Railway will assign via $PORT env var
 EXPOSE 3000
 
 # Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=15s --retries=3 \
+HEALTHCHECK --interval=30s --timeout=15s --start-period=60s --retries=5 \
   CMD wget -qO- http://localhost:${PORT:-3000}/api/health || exit 1
 
-# Start the production server
-CMD ["node", "dist/index.js"]
+# Start via script that runs migrations first
+CMD ["sh", "./docker-start.sh"]

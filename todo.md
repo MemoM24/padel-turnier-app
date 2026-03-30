@@ -200,3 +200,16 @@
 - [x] Abschlussseite: Vollständige Platzierungsliste aller Teams
 - [x] Abschlussseite: Turnier als "beendet" markieren und in Verlauf speichern
 - [x] Abschlussseite: Zurück zur Startseite / Neues Turnier starten
+
+## Verbesserungen v14 – Railway-URL, Spieler-Identifikation, QR-Code-Flow
+
+- [ ] Railway-URL als EXPO_PUBLIC_API_BASE_URL einbauen
+- [ ] trpc.ts: Production-URL aus Umgebungsvariable lesen
+- [ ] Join-Screen: Vorname/Nachname/Geburtsdatum-Eingabe
+- [ ] Spieler-Identifikation: SHA-256-Hash aus Name+Geburtsdatum
+- [ ] Spieler-Hash lokal speichern (AsyncStorage), automatische Wiedererkennung
+- [ ] QR-Code-Flow: Admin erstellt Turnier → QR zeigt Railway-URL
+- [ ] QR-Code-Flow: Spieler scannt vor Start → Join-Screen → Admin bestätigt → Live-Ansicht
+- [ ] QR-Code-Flow: Spieler scannt nach Start → direkt zur Live-Ansicht
+- [ ] QR-Code-Flow: App erneut öffnen → automatische Wiedererkennung
+- [ ] GitHub Push nach allen Änderungen

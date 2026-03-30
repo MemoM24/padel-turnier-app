@@ -45,6 +45,11 @@ export function getApiBaseUrl(): string {
     }
   }
 
+  // On native device (Expo Go / APK): use Railway production backend
+  if (ReactNative.Platform.OS !== "web") {
+    return "https://padel-turnier-app-production.up.railway.app";
+  }
+
   // Fallback to empty (will use relative URL)
   return "";
 }
