@@ -213,3 +213,14 @@
 - [ ] QR-Code-Flow: Spieler scannt nach Start → direkt zur Live-Ansicht
 - [ ] QR-Code-Flow: App erneut öffnen → automatische Wiedererkennung
 - [ ] GitHub Push nach allen Änderungen
+
+## Verbesserungen v15 – Spieler-Identifikation
+
+- [x] lib/playerIdentity.ts: SHA-256-Hash aus Vorname+Nachname+Geburtsdatum
+- [x] lib/playerIdentity.ts: Identität lokal in AsyncStorage speichern/laden
+- [x] Join-Screen: Vorname-Feld (Pflicht, nur Buchstaben, max 20 Zeichen, auto-capitalize)
+- [x] Join-Screen: Nachname-Feld (Pflicht, gleiche Regeln wie Vorname)
+- [x] Join-Screen: Geburtsdatum-DatePicker (TT.MM.JJJJ, Mindestalter 10, Maximalalter 90)
+- [x] Join-Screen: Hinweistexte unter den Feldern
+- [x] Join-Screen: Automatische Wiedererkennung (gespeicherte Identität überspringt Formular)
+- [x] Join-Screen: "Nicht ich" Button um Identität zurückzusetzen
