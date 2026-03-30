@@ -224,3 +224,19 @@
 - [x] Join-Screen: Hinweistexte unter den Feldern
 - [x] Join-Screen: Automatische Wiedererkennung (gespeicherte Identität überspringt Formular)
 - [x] Join-Screen: "Nicht ich" Button um Identität zurückzusetzen
+
+## Verbesserungen v16 – Persönlicher Padel-Begleiter
+
+- [x] Dark Theme durchgehend, Akzentfarbe #1ed97a
+- [x] 4-Tab-Navigation: Mein Spiel, Turnier, Kalender, Profil
+- [x] Datenmodell: GameEntry, PlannedGame, PlayerProfile in AsyncStorage
+- [x] Tab 1 Dashboard: Greeting, Level-Badge, 3 Ringe, Nächstes Spiel, Formkurve, Skill-Bars
+- [x] Tab 1 Tagebuch: Chronologische Liste, Mood-Emoji, Score, Tags, FAB
+- [x] Tab 1 Post-Game Sheet: Schritt 1 Basics (Mood, Score, Partner, Gegner)
+- [x] Tab 1 Post-Game Sheet: Schritt 2 Court & Position (6 Zonen, Stärken/Fehler)
+- [x] Tab 1 Post-Game Sheet: Schritt 3 Schläge & Faktoren (Chips)
+- [x] Tab 1 Statistiken: Schlag-Analyse Bars, Court-Heatmap, Störfaktoren
+- [x] Tab 3 Kalender: Monatsansicht, Dots, Spiel planen
+- [x] Tab 4 Profil: Avatar, Level-Cards, Achievements, Partner-Chemie
+- [ ] Wöchentliche Push-Notification (Montag 09:00)
+- [ ] Datenschutz-Onboarding beim ersten Start
